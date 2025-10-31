@@ -129,7 +129,7 @@ dependencies = [
   # Spell checking
   "codespell~=2.3", "tomli~=2.0.2",
   # Pre-commit hooks run in static analysis environment
-  "pre-commit~=4.0",
+  "prek~=0.2",
   "pre-commit-hooks~=5.0",
 ]
 

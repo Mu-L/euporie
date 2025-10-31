@@ -61,3 +61,4 @@ repos:
         entry: hatch run test:run
         language: system
         pass_filenames: false
+        types: [python]
