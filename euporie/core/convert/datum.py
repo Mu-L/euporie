@@ -404,7 +404,7 @@ class Datum(Generic[T], metaclass=_MetaDatum):
                 converted to a image.
         """
         if self._cell_size is None:
-            cols, aspect = 0, 0.0
+            cols, aspect = 0, 1.0
             px, py = await self.pixel_size_async()
             if px is not None and py is not None:
                 app = get_app()
