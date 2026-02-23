@@ -4,14 +4,19 @@ Changelog
 
 Notable changes to this project will be documented in this file.
 
-********
-Upcoming
-********
+********************
+v2.10.4 (2026-02-23)
+********************
 
 Added
 =====
 
 - Add autosuggestion acceptance key-bindings for vi & emacs editing modes
+
+Fixed
+=====
+
+- Prevent crash on zero-width graphics
 
 ----
 
