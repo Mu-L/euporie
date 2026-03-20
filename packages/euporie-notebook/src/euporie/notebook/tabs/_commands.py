@@ -14,6 +14,8 @@ from apptk.filters.buffer import (
 )
 from apptk.filters.modes import (
     exitable_mode,
+    helix_insert_mode,
+    vi_insert_mode,
 )
 
 from euporie.core.filters import (
@@ -638,10 +640,28 @@ def _split_cell() -> None:
 
 
 @add_cmd(
-    keys=["up", "k"],
-    filter=(
-        cell_has_focus & buffer_has_focus & cursor_on_first_line & ~has_completions
-    ),
+    bindings=[
+        {
+            "keys": ("up",),
+            "filter": (
+                cell_has_focus
+                & buffer_has_focus
+                & cursor_on_first_line
+                & ~has_completions
+            ),
+        },
+        {
+            "keys": ("k",),
+            "filter": (
+                cell_has_focus
+                & buffer_has_focus
+                & cursor_on_first_line
+                & ~has_completions
+                & ~helix_insert_mode
+                & ~vi_insert_mode
+            ),
+        },
+    ],
 )
 def _edit_previous_cell() -> None:
     """Move the cursor up to the previous cell."""
@@ -655,8 +675,28 @@ def _edit_previous_cell() -> None:
 
 
 @add_cmd(
-    keys=["down", "j"],
-    filter=(cell_has_focus & buffer_has_focus & cursor_on_last_line & ~has_completions),
+    bindings=[
+        {
+            "keys": ("down",),
+            "filter": (
+                cell_has_focus
+                & buffer_has_focus
+                & cursor_on_last_line
+                & ~has_completions
+            ),
+        },
+        {
+            "keys": ("j",),
+            "filter": (
+                cell_has_focus
+                & buffer_has_focus
+                & cursor_on_last_line
+                & ~has_completions
+                & ~helix_insert_mode
+                & ~vi_insert_mode
+            ),
+        },
+    ],
 )
 def _edit_next_cell() -> None:
     """Move the cursor down to the next cell."""
