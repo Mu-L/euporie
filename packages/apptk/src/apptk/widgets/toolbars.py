@@ -26,7 +26,9 @@ from apptk.data_structures import Point
 from apptk.enums import COMMAND_BUFFER, SEARCH_BUFFER
 from apptk.filters import buffer_has_focus, has_completions, has_focus, is_done
 from apptk.filters.base import Condition
-from apptk.filters.modes import navigation_mode
+from apptk.filters.modes import (
+    navigation_mode,
+)
 from apptk.filters.utils import to_filter
 from apptk.formatted_text import to_formatted_text
 from apptk.formatted_text.utils import apply_style, pad, truncate
@@ -346,7 +348,7 @@ class CommandBar:
             {"keys": "A-:", "is_global": True},
             {
                 "keys": ":",
-                "filter": ~buffer_has_focus | navigation_mode,
+                "filter": ~buffer_has_focus | (buffer_has_focus & navigation_mode),
             },
         ],
     )

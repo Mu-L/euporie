@@ -25,6 +25,7 @@ __all__ = [
     "micro_mode",
     "micro_recording_macro",
     "micro_replace_mode",
+    "navigation_mode",
     "replace_mode",
 ]
 
@@ -110,10 +111,14 @@ insert_mode = (
 )
 
 """Determine if any binding style is in replace mode."""
-replace_mode = micro_replace_mode | vi_replace_mode | helix_replace_mode
+replace_mode = (
+    (micro_mode & micro_replace_mode)
+    | (vi_mode & vi_replace_mode)
+    | (helix_mode & helix_replace_mode)
+)
 
 """Determine if any binding style is in navigation mode."""
-navigation_mode = vi_navigation_mode | helix_navigation_mode
+navigation_mode = (vi_mode & vi_navigation_mode) | (helix_mode & helix_navigation_mode)
 
 """Determine if the current editing mode is exitable."""
 exitable_mode = (
