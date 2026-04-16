@@ -14,8 +14,7 @@ from apptk.filters.buffer import (
 )
 from apptk.filters.modes import (
     exitable_mode,
-    helix_insert_mode,
-    vi_insert_mode,
+    insert_mode,
 )
 
 from euporie.core.filters import (
@@ -657,8 +656,7 @@ def _split_cell() -> None:
                 & buffer_has_focus
                 & cursor_on_first_line
                 & ~has_completions
-                & ~helix_insert_mode
-                & ~vi_insert_mode
+                & ~insert_mode
             ),
         },
     ],
@@ -692,8 +690,7 @@ def _edit_previous_cell() -> None:
                 & buffer_has_focus
                 & cursor_on_last_line
                 & ~has_completions
-                & ~helix_insert_mode
-                & ~vi_insert_mode
+                & ~insert_mode
             ),
         },
     ],
