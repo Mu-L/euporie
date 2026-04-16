@@ -482,7 +482,7 @@ class LocalPythonKernel(BaseKernel):
 
         # Find the start of the word (going backwards from cursor)
         start = cursor_pos
-        while (start >= 0 and source[start - 1].isalnum()) or source[start - 1] in "._":
+        while start > 0 and (source[start - 1].isalnum() or source[start - 1] in "._"):
             start -= 1
         # Find the end of the word (going forwards from cursor)
         end = cursor_pos
