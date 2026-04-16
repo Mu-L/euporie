@@ -227,6 +227,24 @@ autocomplete = Setting(
     """,
 )
 
+autopair = Setting(
+    name="autopair",
+    flags=["--autopair"],
+    type_=bool,
+    help_="Automatically insert matching brackets and quotes",
+    default=True,
+    description="""
+        When enabled, typing an opening bracket or quote character will
+        automatically insert the corresponding closing character. Typing a
+        closing bracket will skip over an existing one if it matches.
+
+        In micro editing mode, selecting text and typing a bracket or quote
+        will wrap the selection.
+
+        Set to ``False`` to disable all automatic bracket pairing behaviour.
+    """,
+)
+
 autosuggest = Setting(
     name="autosuggest",
     flags=["--autosuggest"],

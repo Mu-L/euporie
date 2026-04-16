@@ -25,11 +25,15 @@ from prompt_toolkit.key_binding.bindings.basic import (
     load_basic_bindings as ptk_load_basic_bindings,
 )
 
+from euporie.core.filters import config_filter
+
 if TYPE_CHECKING:
     from apptk.key_binding.key_bindings import KeyBindings, KeyBindingsBase
     from apptk.key_binding.key_processor import KeyPressEvent
 
 __all__ = ["load_basic_bindings"]
+
+autopair = config_filter("autopair")
 
 # Commands
 
@@ -66,6 +70,7 @@ for left, right in [("(", ")"), ("[", "]"), ("{", "}")]:
         name=f"complete-bracket-{left}{right}",
         filter=buffer_has_focus
         & insert_mode
+        & autopair
         & (char_after_cursor(" ") | cursor_at_end_of_line),
         save_before=if_no_repeat,
         hidden=True,
@@ -75,6 +80,7 @@ for left, right in [("(", ")"), ("[", "]"), ("{", "}")]:
         name=f"close-bracket-{left}{right}",
         filter=buffer_has_focus
         & insert_mode
+        & autopair
         & char_after_cursor(right)
         & has_matching_bracket,
         save_before=if_no_repeat,

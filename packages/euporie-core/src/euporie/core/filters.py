@@ -11,6 +11,26 @@ from apptk.filters import (
 )
 
 
+@cache
+def config_filter(name: str) -> Condition:
+    """Create a filter that checks a boolean config setting.
+
+    Args:
+        name: The name of the config setting to check.
+
+    Returns:
+        A condition that evaluates to the current value of the setting.
+    """
+
+    def _check() -> bool:
+        try:
+            return bool(getattr(get_app().config.filters, name)())
+        except Exception:
+            return True
+
+    return Condition(_check)
+
+
 @Condition
 def has_tabs() -> bool:
     """Filter to show if any tabs are open in an app."""

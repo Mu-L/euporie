@@ -40,11 +40,15 @@ from apptk.key_binding.utils import if_no_repeat
 from apptk.keys import Keys
 from apptk.selection import SelectionState, SelectionType
 
+from euporie.core.filters import config_filter
+
 if TYPE_CHECKING:
     from apptk.key_binding import KeyPressEvent
     from apptk.key_binding.key_bindings import KeyBindingsBase
 
 log = logging.getLogger(__name__)
+
+autopair = config_filter("autopair")
 
 
 def load_micro_bindings() -> KeyBindings:
@@ -354,7 +358,7 @@ for pair, keys in WRAP_PAIRS["code"]:
         keys=keys,
         title=f"Wrap selection in {pair}",
         description=f"Wraps the current selection with: {pair}",
-        filter=buffer_has_focus & has_selection & buffer_is_code,
+        filter=buffer_has_focus & has_selection & buffer_is_code & autopair,
         hidden=True,
     )(partial(wrap_selection_cmd, left, right))
 
@@ -366,7 +370,7 @@ for pair, keys in WRAP_PAIRS["markdown"]:
         keys=keys,
         title=f"Wrap selection in {pair}",
         description=f"Wraps the current selection with: {pair}",
-        filter=buffer_has_focus & has_selection & buffer_is_markdown,
+        filter=buffer_has_focus & has_selection & buffer_is_markdown & autopair,
         hidden=True,
     )(partial(wrap_selection_cmd, left, right))
 
