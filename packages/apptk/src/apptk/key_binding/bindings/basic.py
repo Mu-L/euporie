@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from apptk.commands import add_cmd, commands_from_key_bindings, get_cmd
 from apptk.filters import (
     buffer_has_focus,
+    has_selection,
 )
 from apptk.filters.buffer import (
     char_after_cursor,
@@ -88,6 +89,24 @@ for left, right in [("(", ")"), ("[", "]"), ("{", "}")]:
     )(partial(_skip_close_bracket, right))
 
 
+@add_cmd(
+    keys=["<bracketed-paste>"],
+    name="bracketed-paste-replace-selection",
+    filter=buffer_has_focus & has_selection,
+    hidden=True,
+    eager=True,
+)
+def bracketed_paste_replace_selection(event: KeyPressEvent) -> None:
+    """Paste from clipboard, replacing the current selection."""
+    data = event.data
+    # Normalize line endings
+    data = data.replace("\r\n", "\n")
+    data = data.replace("\r", "\n")
+    # Cut the selection first, then insert the pasted data
+    event.current_buffer.cut_selection()
+    event.current_buffer.insert_text(data)
+
+
 def load_basic_bindings() -> KeyBindingsBase:
     """Load basic key bindings through the command system.
 
@@ -113,6 +132,8 @@ def load_basic_bindings() -> KeyBindingsBase:
         "close-bracket-()",
         "close-bracket-[]",
         "close-bracket-{}",
+        # Paste bindings
+        "bracketed-paste-replace-selection",
         # Completion bindings
         "menu-complete",
         "menu-complete-backward",
