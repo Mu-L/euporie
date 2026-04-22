@@ -6555,6 +6555,7 @@ _MORE_ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     "\x1b[21;199~": Keys.ControlAltF10,
     "\x1b[23;199~": Keys.ControlAltF11,
     "\x1b[24;199~": Keys.ControlAltF12,
+    "\x1b[0n": Keys.DeviceStatusResponse,
 }
 ANSI_SEQUENCES.update(_MORE_ANSI_SEQUENCES)
 REVERSE_ANSI_SEQUENCES.update({v: k for k, v in _MORE_ANSI_SEQUENCES.items()})

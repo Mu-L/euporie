@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from apptk.input.ansi_escape_sequences import ANSI_SEQUENCES
 from prompt_toolkit.input import vt100_parser as ptk_vt100_parser
@@ -89,13 +89,12 @@ class Vt100Parser(ptk_vt100_parser.Vt100Parser):
             Keys.ClipboardDataResponse: re.compile(
                 r"^\x1b\]52;(?:c|p)?;(?P<data>[A-Za-z0-9+/=]+)\x1b\\"
             ),
-            Keys.DeviceStatusResponse: re.compile(r"^\x1b\[0n"),
         }
 
     def _get_match(self, prefix: str) -> None | Keys | tuple[Keys, ...]:
         """Check for additional key matches first."""
         for key, pattern in self.patterns.items():
             if pattern.match(prefix):
-                return cast("Keys", key)
+                return key
 
         return super()._get_match(prefix)
