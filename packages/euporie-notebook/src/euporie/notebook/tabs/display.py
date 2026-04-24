@@ -13,6 +13,7 @@ from apptk.layout.dimension import Dimension
 from apptk.layout.display import Display
 from apptk.layout.margins import ScrollbarMargin
 
+from euporie.core.path import safe_write
 from euporie.core.tabs.base import Tab
 
 if TYPE_CHECKING:
@@ -94,6 +95,7 @@ class DisplayTab(Tab):
         if isinstance(data, str):
             data = data.encode()
         if isinstance(data, bytes):
-            path.write_bytes(data)
+            with safe_write(path, mode="wb") as open_file:
+                open_file.write(data)
         else:
             raise NotImplementedError(f"Cannot save '{self.display.datum.format}' file")

@@ -122,35 +122,10 @@ class Tab(metaclass=ABCMeta):
         path = self.path
         try:
             # Ensure parent path exists
-            parent = path.parent
-            parent.mkdir(exist_ok=True, parents=True)
+            path.parent.mkdir(exist_ok=True, parents=True)
 
-            # Create backup if original file exists
-            backup_path: Path | None = None
-            if path.exists():
-                name = f"{path.name}.bak"
-                if not name.startswith("."):
-                    name = f".{name}"
-                backup_path = parent / name
-                if self.app.config.backup_on_save:
-                    try:
-                        import shutil
-
-                        shutil.copy2(path, backup_path)
-                    except Exception as e:
-                        log.error("Failed to create backup: %s", e)
-                        raise
-
-            # Write new content directly to original file
-            try:
-                self.write_file(path)
-            except Exception as e:
-                log.error("Failed to write file: %s", e)
-                # Restore from backup if it exists
-                if backup_path is not None:
-                    log.info("Restoring backup")
-                    backup_path.replace(path)
-                raise
+            # Write file (implementations handle atomicity and backups)
+            self.write_file(path)
 
             self.dirty = False
             self.saving = False

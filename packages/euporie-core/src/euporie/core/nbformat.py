@@ -184,24 +184,35 @@ def read(
     """Read a notebook from a file, without validation."""
     try:
         nb_dict = json.load(fp, **kwargs)
-
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        # Not a JSON file — requires jupytext or nbformat to read
+        nb_dict = None
+    else:
         # Fallback for non-v4 notebooks
         if nb_dict.get("nbformat") != 4:
-            raise ValueError("Not a v4 notebook")
+            nb_dict = None
 
+    if nb_dict is not None:
         nb = NotebookNode._from_dict(nb_dict)
         nb = _rejoin_lines(nb)
         nb = _strip_transient(nb)
         return nb
-    except Exception:
-        try:
-            from jupytext import read as read_orig
-        except ModuleNotFoundError:
-            from nbformat import read as read_orig
 
-        # Reset file pointer and use original implementation
-        fp.seek(0)
-        return read_orig(fp, as_version, capture_validation_error, **kwargs)
+    # Fall back to jupytext or nbformat for non-v4/non-JSON files
+    try:
+        from jupytext import read as read_orig
+    except ModuleNotFoundError:
+        try:
+            from nbformat import read as read_orig
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Cannot read this notebook format: "
+                "neither 'jupytext' nor 'nbformat' is installed"
+            ) from None
+
+    # Reset file pointer and use original implementation
+    fp.seek(0)
+    return read_orig(fp, as_version, capture_validation_error, **kwargs)
 
 
 def new_notebook(**kwargs: Any) -> NotebookNode:

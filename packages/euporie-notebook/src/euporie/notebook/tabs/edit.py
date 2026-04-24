@@ -13,6 +13,7 @@ from apptk.layout.dimension import Dimension
 from apptk.lexers.utils import detect_lexer
 
 from euporie.core.kernel.base import BaseKernel, MsgCallbacks
+from euporie.core.path import safe_write
 from euporie.core.tabs.kernel import KernelTab
 from euporie.core.widgets.inputs import KernelInput
 
@@ -159,7 +160,10 @@ class EditorTab(KernelTab):
             path: An path at which to save the file
 
         """
-        path.write_text(self.input_box.buffer.text)
+        with safe_write(
+            path, create_backup=self.app.config.backup_on_save
+        ) as open_file:
+            open_file.write(self.input_box.buffer.text)
 
     def __pt_searchables__(self) -> list[Window]:
         """Searchable buffers in the tab."""

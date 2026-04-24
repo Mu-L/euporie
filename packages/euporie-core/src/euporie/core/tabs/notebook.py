@@ -6,6 +6,7 @@ import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from base64 import standard_b64decode
 from functools import partial
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from apptk.filters import Never
@@ -16,12 +17,12 @@ from euporie.core.kernel.base import MsgCallbacks
 from euporie.core.nbformat import from_dict, new_code_cell, new_notebook
 from euporie.core.nbformat import read as read_nb
 from euporie.core.nbformat import write as write_nb
+from euporie.core.path import safe_write
 from euporie.core.tabs.kernel import KernelTab
 from euporie.core.widgets.cell import Cell, get_cell_id
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
-    from pathlib import Path
     from typing import Any
 
     from apptk.filters import Filter
@@ -286,13 +287,15 @@ class BaseNotebook(KernelTab, metaclass=ABCMeta):
                     },
                 }
             }
-        with path.open("w") as open_file:
+        with safe_write(
+            path, create_backup=self.app.config.backup_on_save
+        ) as open_file:
             try:
                 write_nb(nb=from_dict(self.json), fp=open_file)
             except AssertionError:
                 try:
                     # Jupytext requires a filename if we don't give it a format
-                    write_nb(nb=from_dict(self.json), fp=path)
+                    write_nb(nb=from_dict(self.json), fp=Path(open_file.name))
                 except Exception:
                     # Jupytext requires a format if the path has no extension
                     # We just use ipynb as the default format
