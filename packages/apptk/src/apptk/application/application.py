@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import asyncio.exceptions
 import io
 import logging
 import os
@@ -198,7 +199,7 @@ class Application(PtkApplication, Generic[_AppResult]):
                         # for terminals that don't respond
                         try:
                             await asyncio.wait_for(sentinel.wait(), timeout=0.5)
-                        except TimeoutError:
+                        except (TimeoutError, asyncio.exceptions.TimeoutError):
                             log.debug("Terminal did not respond to device status query")
                 finally:
                     terminal_bindings._device_status_received = None
