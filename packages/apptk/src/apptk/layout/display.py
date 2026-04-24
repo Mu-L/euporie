@@ -246,14 +246,26 @@ class DisplayControl(UIControl):
             wrap_lines=wrap_lines,
             **self.convert_kwargs,
         )
+        lines = list(split_lines(ft))
         if width and height:
+            # Use the maximum of the requested render size and the actual text
+            # dimensions so the graphic overlay fully covers the ASCII fallback
+            actual_width = max(
+                (fragment_list_width(line) for line in lines),
+                default=0,
+            )
+            actual_height = len(lines)
+            cover_width = max(width, actual_width)
+            cover_height = max(height, actual_height)
             key = datum.add_size(
-                Size(height, width),
+                Size(cover_height, cover_width),
                 fit_width=self.fit_width,
                 fit_height=self.fit_height,
             )
-            ft = [(f"[Graphic_{key}]", ""), *ft]
-        lines = list(split_lines(ft))
+            if lines:
+                lines[0] = [(f"[Graphic_{key}]", ""), *lines[0]]
+            else:
+                lines = [[(f"[Graphic_{key}]", "")]]
         if wrap_lines and width:
             lines = [
                 wrapped_line
