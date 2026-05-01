@@ -16,7 +16,7 @@ from apptk.data_structures import Point, Size
 from apptk.enums import FitMode
 from apptk.filters.app import display_has_focus, scrollable
 from apptk.filters.utils import to_filter
-from apptk.formatted_text.utils import fragment_list_width, split_lines, wrap
+from apptk.formatted_text.utils import fragment_list_width, split_lines, strip, wrap
 from apptk.key_binding.key_bindings import KeyBindings
 from apptk.layout.containers import (
     ConditionalContainer,
@@ -28,7 +28,9 @@ from apptk.layout.containers import (
 from apptk.layout.controls import GetLinePrefixCallable, UIContent, UIControl
 from apptk.layout.dimension import Dimension, to_dimension
 from apptk.layout.margins import ScrollbarMargin
+from apptk.layout.utils import explode_text_fragments
 from apptk.mouse_events import MouseEvent, MouseEventType
+from apptk.selection import SelectionType
 from apptk.utils import Event, to_str
 
 if TYPE_CHECKING:
@@ -99,6 +101,8 @@ class DisplayControl(UIControl):
         threaded: bool = False,
         mouse_handler: Callable[[MouseEvent], NotImplementedOrNone] | None = None,
         convert_kwargs: dict[str, Any] | None = None,
+        selectable: FilterOrBool = False,
+        auto_copy_selection: FilterOrBool = False,
     ) -> None:
         """Create a new web-view control instance.
 
@@ -115,6 +119,8 @@ class DisplayControl(UIControl):
             threaded: Whether to render in a background thread.
             mouse_handler: Optional mouse event handler.
             convert_kwargs: Additional arguments for datum conversion.
+            selectable: Whether text can be selected with the mouse.
+            auto_copy_selection: Whether to automatically copy selections to clipboard.
         """
         self._datum = datum
         self.style = style
@@ -128,7 +134,11 @@ class DisplayControl(UIControl):
         self.threaded = threaded
         self.convert_kwargs = convert_kwargs or {}
 
+        self.selectable = to_filter(selectable)
+        self.auto_copy_selection = to_filter(auto_copy_selection)
+
         self._cursor_position = Point(0, 0)
+        self.selection_start: Point | None = None
         self.loading = False
         self.resizing = False
         self.rendering = False
@@ -246,7 +256,11 @@ class DisplayControl(UIControl):
             wrap_lines=wrap_lines,
             **self.convert_kwargs,
         )
-        lines = list(split_lines(ft))
+        # lines = list(split_lines(ft))
+        lines = [
+            strip(line, left=False, right=True, only_unstyled=True)
+            for line in split_lines(ft)
+        ]
         if width and height:
             # Use the maximum of the requested render size and the actual text
             # dimensions so the graphic overlay fully covers the ASCII fallback
@@ -400,7 +414,40 @@ class DisplayControl(UIControl):
             try:
                 line = lines[i]
             except IndexError:
-                return []
+                line = []
+
+            if self.selectable() and (sel := self.selection_start) is not None:
+                start, end = sorted(
+                    (sel, self._cursor_position), key=lambda p: (p.y, p.x)
+                )
+                if start.y <= i <= end.y:
+                    if start.y < i < end.y:
+                        # Middle line — fully selected, no need to explode
+                        line = [
+                            (f"{style} class:selected", *rest) for style, *rest in line
+                        ]
+                    else:
+                        line = explode_text_fragments(line)
+                        if start.y == end.y:
+                            # Selection within a single line
+                            c_start = start.x
+                            c_end = end.x
+                        elif i == start.y:
+                            # First line of multi-line selection
+                            c_start = start.x
+                            c_end = len(line)
+                        else:
+                            # Last line of multi-line selection
+                            c_start = 0
+                            c_end = end.x
+                        line = [
+                            *line[:c_start],
+                            *[
+                                (f"{style} class:selected", *rest)
+                                for style, *rest in line[c_start : c_end + 1]
+                            ],
+                            *line[c_end + 1 :],
+                        ]
             return line
 
         return UIContent(
@@ -443,8 +490,31 @@ class DisplayControl(UIControl):
         ):
             get_app().layout.current_control = self
             result = None
+
+        if self.selectable():
+            if mouse_event.event_type == MouseEventType.MOUSE_DOWN:
+                pos = mouse_event.position
+                self.cursor_position = self.selection_start = Point(pos.x, pos.y)
+                result = None
+            elif mouse_event.event_type == MouseEventType.MOUSE_MOVE:
+                if self.selection_start is not None:
+                    pos = mouse_event.position
+                    self.cursor_position = Point(pos.x, pos.y)
+                    result = None
+            elif mouse_event.event_type == MouseEventType.MOUSE_UP:
+                if (
+                    self.auto_copy_selection()
+                    and self.selection_start is not None
+                    and self.selection_start != self._cursor_position
+                ):
+                    self._copy_selection_to_clipboard()
+                self.selection_start = None
+                result = None
+
         if callable(_mouse_handler := self._mouse_handler):
-            return _mouse_handler(mouse_event)
+            handler_result = _mouse_handler(mouse_event)
+            if result is not None:
+                result = handler_result
         return result
 
     @property
@@ -471,6 +541,63 @@ class DisplayControl(UIControl):
         """Move the cursor up one line."""
         x, y = self.cursor_position
         self.cursor_position = Point(x=x + 1, y=y)
+
+    def get_selected_text(self) -> str:
+        """Return the currently selected text.
+
+        Returns:
+            The selected text as a string, or empty string if no selection.
+        """
+        if self.selection_start is None:
+            return ""
+
+        start, end = sorted(
+            (self.selection_start, self._cursor_position), key=lambda p: (p.y, p.x)
+        )
+
+        lines = self.lines
+        if not lines:
+            return ""
+
+        selected_lines: list[str] = []
+        for y in range(start.y, min(end.y + 1, len(lines))):
+            line = explode_text_fragments(lines[y])
+            line_len = len(line)
+            if start.y == end.y:
+                c_start = start.x
+                c_end = min(end.x, line_len - 1)
+            elif y == start.y:
+                c_start = start.x
+                c_end = line_len - 1
+            elif y == end.y:
+                c_start = 0
+                c_end = min(end.x, line_len - 1)
+            else:
+                c_start = 0
+                c_end = line_len - 1
+            if line_len > 0 and c_start <= c_end:
+                selected_lines.append(
+                    "".join(text for _, text, *_ in line[c_start : c_end + 1])
+                )
+            else:
+                selected_lines.append("")
+
+        return "\n".join(selected_lines)
+
+    def _copy_selection_to_clipboard(self) -> None:
+        """Copy the current selection to the application clipboard."""
+        from apptk.clipboard.base import ClipboardData
+
+        text = self.get_selected_text()
+        if text:
+            get_app().clipboard.set_data(
+                ClipboardData(
+                    text=text,
+                    type=SelectionType.LINES
+                    if "\n" in text
+                    else SelectionType.CHARACTERS,
+                )
+            )
 
     def get_invalidate_events(self) -> Iterable[Event[object]]:
         """Return the Window invalidate events."""
@@ -515,6 +642,8 @@ class Display(Container):
         scrollbar_autohide: FilterOrBool = True,
         mouse_handler: Callable[[MouseEvent], NotImplementedOrNone] | None = None,
         convert_kwargs: dict[str, Any] | None = None,
+        selectable: FilterOrBool = False,
+        auto_copy_selection: FilterOrBool = False,
     ) -> None:
         """Instantiate an Output container object.
 
@@ -535,6 +664,8 @@ class Display(Container):
             scrollbar_autohide: Whether to automatically hide the scrollbar
             mouse_handler: Optional mouse handler for the display control
             convert_kwargs: Key-word arguments to pass to :py:method:`Datum.convert`
+            selectable: Whether text can be selected with the mouse
+            auto_copy_selection: Whether to automatically copy selections to clipboard
 
         """
         self._style = style
@@ -557,6 +688,8 @@ class Display(Container):
             expand_height=expand_height,
             mouse_handler=mouse_handler,
             convert_kwargs=convert_kwargs,
+            selectable=selectable,
+            auto_copy_selection=auto_copy_selection,
         )
 
         # Calculate dont_extend based on expand settings

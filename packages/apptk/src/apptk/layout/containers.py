@@ -1097,6 +1097,13 @@ class Window(PtkWindow):
 
                     col += 1
                     x += char_width
+
+            # Add an extra character mapping at the end of the line
+            current_rowcol_to_yx[lineno, col + skipped] = (
+                y + ypos,
+                x + xpos,
+            )
+
             return x, y
 
         # Copy content.

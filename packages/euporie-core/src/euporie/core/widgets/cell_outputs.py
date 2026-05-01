@@ -169,6 +169,8 @@ class CellOutputDataElement(CellOutputElement):
             style=f"class:mime-{mime.replace('/', '-')}",
             scrollbar=False,
             convert_kwargs=convert_kwargs,
+            selectable=True,
+            auto_copy_selection=True,
         )
 
         # Ensure container gets invalidated if `wrap_cell_output` changes
