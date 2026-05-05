@@ -149,6 +149,7 @@ class DisplayControl(UIControl):
 
         self._mouse_handler = mouse_handler
 
+        self._window: Window | None = None
         self.rendered = Event(self)
         self.on_cursor_position_changed = Event(self)
         self.invalidate_events: list[Event[object]] = [
@@ -495,6 +496,19 @@ class DisplayControl(UIControl):
             if mouse_event.event_type == MouseEventType.MOUSE_DOWN:
                 pos = mouse_event.position
                 self.cursor_position = self.selection_start = Point(pos.x, pos.y)
+                # Set mouse limits so mouse-up outside the control is still captured
+                app = get_app()
+                if (
+                    self._window is not None
+                    and (screen := app.renderer._last_screen) is not None
+                    and (
+                        wp := screen.visible_windows_to_write_positions.get(
+                            self._window
+                        )
+                    )
+                    is not None
+                ):
+                    app.mouse_limits = wp
                 result = None
             elif mouse_event.event_type == MouseEventType.MOUSE_MOVE:
                 if self.selection_start is not None:
@@ -502,6 +516,7 @@ class DisplayControl(UIControl):
                     self.cursor_position = Point(pos.x, pos.y)
                     result = None
             elif mouse_event.event_type == MouseEventType.MOUSE_UP:
+                get_app().mouse_limits = None
                 if (
                     self.auto_copy_selection()
                     and self.selection_start is not None
@@ -705,6 +720,8 @@ class Display(Container):
             style=self._get_style,
             char=" ",
         )
+
+        self.control._window = self.window
 
         self._container = VSplit(
             [
