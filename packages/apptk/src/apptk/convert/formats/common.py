@@ -71,7 +71,9 @@ async def chafa_convert_cmd(
         "chafa",
         f"--format={output_format}",
         "--passthrough=none",
+        "--probe=off",
         "--polite=on",
+        "--animate=off",
         "--symbols=all",
     ]
     if cols is not None or rows is not None:
