@@ -961,5 +961,7 @@ class MenuContainer(PtkMenuContainer):
 
     def __pt_status__(self) -> StatusBarFields:
         """Return the description of the currently selected menu item."""
+        if not self.selected_menu:
+            return ([], [])
         selected_item = self._get_menu(len(self.selected_menu) - 1)
         return ([selected_item.description], [])
