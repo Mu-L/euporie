@@ -61,7 +61,8 @@ class TocEntry(NamedTuple):
     level: int
     text: str
     token: str
-    lines: slice
+    line_start: int
+    line_stop: int
     window: Window
 
 
@@ -140,7 +141,8 @@ class TocControl(UIControl):
                                         level=last_level,
                                         text=text_buffer.strip(" #=-*"),
                                         token=last_token,
-                                        lines=slice(start_line, last_line),
+                                        line_start=start_line,
+                                        line_stop=last_line,
                                         window=window,
                                     )
                                 )
@@ -159,7 +161,8 @@ class TocControl(UIControl):
                     level=last_level,
                     text=text_buffer.strip(" #=-*"),
                     token=last_token,
-                    lines=slice(start_line, last_line),
+                    line_start=start_line,
+                    line_stop=last_line,
                     window=window,
                 )
             )
@@ -267,12 +270,12 @@ class TocControl(UIControl):
             if isinstance(control := entry.window.content, BufferControl):
                 buffer: Buffer = control.buffer
                 buffer.selection_state = SelectionState(
-                    buffer.document.translate_row_col_to_index(entry.lines.stop + 1, 0)
+                    buffer.document.translate_row_col_to_index(entry.line_stop + 1, 0)
                     - 1
                 )
                 buffer.selection_state.shift_mode = True
                 buffer.cursor_position = buffer.document.translate_row_col_to_index(
-                    entry.lines.start, 0
+                    entry.line_start, 0
                 )
                 # Signal buffer that we've changed it's cursor's position
                 buffer.on_cursor_position_changed()
