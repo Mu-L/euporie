@@ -12,6 +12,7 @@ from apptk.key_binding.key_bindings import (
     KeyBindings,
 )
 from apptk.layout.containers import (
+    _CONTAINER_STATUSES,
     ConditionalContainer,
     DynamicContainer,
     HSplit,
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
     from apptk.key_binding.key_processor import KeyPressEvent
     from apptk.layout.containers import AnyContainer
     from apptk.mouse_events import MouseEvent
+    from apptk.widgets.toolbars import StatusBarFields
 
 log = logging.getLogger(__name__)
 
@@ -83,6 +85,29 @@ class SideBarButtons(ToggleButtons):
 
         return kb
 
+    @property
+    def hovered_title(self) -> str | None:
+        """Return the title of the currently hovered or selected button.
+
+        Returns:
+            The title string, or None if no button is active.
+        """
+        index = self.hovered if self.hovered is not None else self.index
+        if index is not None and 0 <= index < len(self.options):
+            return self.options[index]
+        return None
+
+    def __pt_status__(self) -> StatusBarFields | None:
+        """Return status bar fields showing the active panel title.
+
+        Returns:
+            Status bar fields tuple, or None if no title to display.
+        """
+        title = self.hovered_title
+        if title:
+            return ([title], [])
+        return None
+
     def load_container(self) -> AnyContainer:
         """Load the widget's container."""
         self.buttons: list[ToggleButton] = []
@@ -116,11 +141,13 @@ class SideBarButtons(ToggleButtons):
             ]
         )
         self.on_change += self.update_buttons
-        return HSplit(
+        container = HSplit(
             children,
             style="class:toggle-buttons",
             key_bindings=self.key_bindings(),
         )
+        _CONTAINER_STATUSES[container] = self.__pt_status__
+        return container
 
 
 class SideBar:
@@ -158,7 +185,8 @@ class SideBar:
             index = None
 
         self.side_bar_buttons = SideBarButtons(
-            options=list(icons),
+            options=list(titles),
+            labels=list(icons),
             style="class:buttons",
             vertical=True,
             border=None,
