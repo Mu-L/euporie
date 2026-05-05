@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 from apptk.application.current import get_app
 from apptk.filters import Condition
-from apptk.formatted_text.base import to_formatted_text
 from apptk.key_binding.key_bindings import (
     KeyBindings,
 )
@@ -97,7 +96,7 @@ class SideBarButtons(ToggleButtons):
                 )
             )
             button = ToggleButton(
-                text=to_formatted_text(label),
+                text=label,
                 selected=selected,
                 on_click=partial(lambda index, button: self.toggle_item(index), i),
                 border=None,

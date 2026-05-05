@@ -49,9 +49,10 @@ class NewTab(Tab):
 
     def load_container(self) -> AnyContainer:
         """Abstract method for loading the notebook's main container."""
+        config = self.app.config
         pattern = Pattern(
-            lambda: self.app.config.background_character,
-            lambda x, y: self.app.config.background_pattern(x, y),
+            lambda: config.background_character,
+            lambda x, y: config.background_pattern(x, y),
         )
 
         cmds = [
@@ -71,9 +72,12 @@ class NewTab(Tab):
             buttons.append(
                 FocusedStyle(
                     Button(
-                        text=[
-                            (f"class:icon {cmd.style} dim", cmd.icon),
-                            ("", f"\n{cmd.menu_title}"),
+                        text=lambda cmd=cmd: [
+                            (
+                                f"class:icon {cmd.style} dim",
+                                f"{cmd.icon}\n" if config.show_icons else "",
+                            ),
+                            ("", f"{cmd.menu_title}"),
                         ],
                         on_click=_on_click,
                         width=Dimension(preferred=17, max=17),
@@ -121,7 +125,10 @@ class NewTab(Tab):
                 tip_display,
                 padding=Dimension(max=1),
             ),
-            title=[("", "💡 Tip of the Day", _tip_click)],
+            title=lambda: [
+                ("", "💡 " if config.show_icons else "", _tip_click),
+                ("", "Tip of the Day", _tip_click),
+            ],
             border=RoundedLine.grid,
             style="class:tab-padding",
         )
@@ -131,7 +138,7 @@ class NewTab(Tab):
                 path=lambda: self.app.state.recent_files,
                 on_open=self.app.open_file,
                 show_address_bar=False,
-                show_icons=self.app.config.filters.show_icons,
+                show_icons=config.filters.show_icons,
                 height=Dimension(min=3, max=10),
                 sort=False,
             ),

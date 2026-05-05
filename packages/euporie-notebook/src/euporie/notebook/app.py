@@ -328,7 +328,7 @@ class NotebookApp(BaseApp):
                 *[
                     (
                         "File Browser",
-                        "",
+                        lambda: "" if self.config.show_icons else [("bold", "F")],
                         FileBrowser(
                             on_chdir=os.chdir,
                             on_open=self.open_file,
@@ -338,13 +338,17 @@ class NotebookApp(BaseApp):
                     ),
                     (
                         "Table of Contents",
-                        "",
+                        lambda: "" if self.config.show_icons else [("bold", "T")],
                         TableOfContents(_shadows=self.config.filters.show_shadows),
                     ),
-                    ("Mini Map", "", MiniMap()),
+                    (
+                        "Mini Map",
+                        lambda: "" if self.config.show_icons else [("bold", "M")],
+                        MiniMap(),
+                    ),
                     (
                         "Variables",
-                        "",
+                        lambda: "" if self.config.show_icons else [("bold", "V")],
                         VariableList(lambda: getattr(self.tab, "kernel", None)),
                     ),
                 ]
