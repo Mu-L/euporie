@@ -731,6 +731,34 @@ def _scroll_output_right() -> None:
 
 
 @add_cmd(
+    keys=["c-left"],
+    filter=cell_has_focus & ~buffer_has_focus,
+)
+def _scroll_output_left_more() -> None:
+    """Scroll the cell output more to the left."""
+    from euporie.notebook.tabs.notebook import Notebook
+
+    if isinstance(nb := get_app().tab, Notebook):
+        scroll_left = nb.cell.output_area.scroll_left
+        for _ in range(10):
+            scroll_left()
+
+
+@add_cmd(
+    keys=["c-right"],
+    filter=cell_has_focus & ~buffer_has_focus,
+)
+def _scroll_output_right_more() -> None:
+    """Scroll the cell output more to the right."""
+    from euporie.notebook.tabs.notebook import Notebook
+
+    if isinstance(nb := get_app().tab, Notebook):
+        scroll_right = nb.cell.output_area.scroll_right
+        for _ in range(10):
+            scroll_right()
+
+
+@add_cmd(
     filter=kernel_tab_has_focus & ~buffer_has_focus & ~display_has_focus,
 )
 def _restart_kernel_and_clear_all_outputs() -> None:

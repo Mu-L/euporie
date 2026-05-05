@@ -641,6 +641,8 @@ class Notebook(BaseNotebook):
         "edit-next-cell",
         "scroll-output-left",
         "scroll-output-right",
+        "scroll-output-left-more",
+        "scroll-output-right-more",
         "toggle-expand",
         "toggle-wrap-cell-outputs",
         "toggle-line-numbers",
