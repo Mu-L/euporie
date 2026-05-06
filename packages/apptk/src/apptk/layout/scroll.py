@@ -96,35 +96,29 @@ class ScrollingContainer(Container):
         self.scrolling = 0
 
     def pre_render_children(self, width: int, height: int) -> None:
-        """Render all unrendered children in a background thread."""
+        """Render all unrendered children incrementally in the background."""
+        self.pre_rendered = 0.0
         children = self.all_children()
         if not children:
+            self.pre_rendered = 1.0
             return
-        self.pre_rendered = 0.0
+
         incr = 1 / len(children)
         app = get_app()
 
-        def _cb(task: asyncio.Task) -> None:
-            """Task callback to update pre-rendering percentage."""
-            assert isinstance(self.pre_rendered, float)
-            self.pre_rendered += incr
-            app.invalidate()
+        async def _run() -> None:
+            for child in children:
+                if child.render_counter == 0:
+                    child.render(width, height)
+                    self.pre_rendered += incr
+                    app.invalidate()
+                    # Give way to maintain UI responsiveness
+                    await asyncio.sleep(0)
 
-        tasks = set()
-        for child in children:
-            if isinstance(child, CachedContainer):
-                task = app.create_background_task(
-                    asyncio.to_thread(child.render, width, height)
-                )
-                task.add_done_callback(_cb)
-                tasks.add(task)
-
-        async def _finish() -> None:
-            await asyncio.gather(*tasks)
             self.pre_rendered = 1.0
             app.invalidate()
 
-        app.create_background_task(_finish())
+        app.create_background_task(_run())
 
     def reset(self) -> None:
         """Reset the state of this container and all the children."""
@@ -687,7 +681,7 @@ class ScrollingContainer(Container):
         available_width = self.last_write_position.width
         available_height = self.last_write_position.height
         for i, child in enumerate(self._children):
-            if isinstance(child, CachedContainer):
+            if isinstance(child, CachedContainer) and child.render_counter > 0:
                 sizes[i] = child.preferred_height(
                     available_width, available_height
                 ).preferred
