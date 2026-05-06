@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 import os
+import re
 import weakref
 from functools import lru_cache, partial
 from pathlib import Path
@@ -18,6 +20,7 @@ from apptk.completion.base import (
     _MergedCompleter,
 )
 from apptk.completion.deduplicate import DeduplicateCompleter
+from apptk.convert.mime import MIME_FORMATS
 from apptk.document import Document
 from apptk.filters.app import is_searching
 from apptk.filters.base import Condition
@@ -95,6 +98,56 @@ def _get_border_style(
     if focused and multi_selected:
         return ThickLine.outer
     return ThinLine.outer
+
+
+def _resolve_attachments(source: str, attachments: dict[str, Any]) -> str:
+    """Replace attachment: URIs in markdown source with data: URIs.
+
+    Args:
+        source: The markdown source text.
+        attachments: The cell's attachments dictionary mapping names to mime-type data.
+
+    Returns:
+        The source with attachment URIs replaced by data URIs.
+
+    """
+    if not attachments:
+        return source
+
+    def replace_attachment(match: re.Match[str]) -> str:
+        """Replace a single attachment reference with a data URI."""
+        attachment_name = match.group(1)
+        if attachment_name not in attachments:
+            return match.group(0)
+
+        attachment_data = attachments[attachment_name]
+        if not attachment_data:
+            return match.group(0)
+
+        # Select mime type based on priority order in MIME_FORMATS
+        mime_types = list(attachment_data.keys())
+        selected_mime = mime_types[0]  # Default to first
+        for mime in MIME_FORMATS:
+            if mime in mime_types:
+                selected_mime = mime
+                break
+
+        data = attachment_data[selected_mime]
+        # Data may be a list of strings or a single string
+        if isinstance(data, list):
+            data = "".join(data)
+        # Check if data is already base64 encoded (no newlines, valid base64 chars)
+        # If it looks like raw data, encode it
+        try:
+            base64.b64decode(data, validate=True)
+            encoded_data = data
+        except Exception:
+            encoded_data = base64.b64encode(data.encode()).decode()
+        return f"data:{selected_mime};base64,{encoded_data}"
+
+    # Match attachment:filename patterns (with or without angle brackets)
+    pattern = r"attachment:([^\s\)>\]]+)"
+    return re.sub(pattern, replace_attachment, source)
 
 
 class Cell:
@@ -636,9 +689,11 @@ class Cell:
     def output_json(self) -> list[dict[str, Any]]:
         """Retrieve a list of cell outputs from the cell's JSON."""
         if self.cell_type == "markdown":
-            return [
-                {"data": {"text/x-markdown": self.input}, "output_type": "markdown"}
-            ]
+            source = self.input
+            # Resolve attachment: URIs to data: URIs
+            if attachments := self.json.get("attachments", {}):
+                source = _resolve_attachments(source, attachments)
+            return [{"data": {"text/x-markdown": source}, "output_type": "markdown"}]
         else:
             return self.json.setdefault("outputs", [])
 

@@ -3850,7 +3850,7 @@ class RichHTML:
                 # for url, result in zip(urls, results.values()):
                 for url, result in results.items():
                     if not isinstance(result, Exception):
-                        log.debug("File %s loaded", url)
+                        log.debug("File '%s' loaded", str(url)[:256])
                         self._url_cbs[url](result)
                     else:
                         log.warning("Error loading %s: %r", url, result)
