@@ -25,7 +25,6 @@ from apptk.layout.containers import (
 from apptk.layout.controls import UIContent, UIControl
 from apptk.layout.decor import FocusedStyle
 from apptk.layout.margins import ScrollbarMargin
-from apptk.layout.screen import WritePosition
 from apptk.mouse_events import MouseButton, MouseEvent, MouseEventType
 from apptk.utils import Event
 from apptk.widgets.base import Frame
@@ -1037,21 +1036,15 @@ class FileBrowserControl(UIControl):
                 self.window is not None
                 and (info := self.window.render_info) is not None
             ):
-                rowcol_to_yx = info._rowcol_to_yx
                 abs_mouse_pos = Point(
                     x=mouse_event.position.x + info._x_offset,
                     y=mouse_event.position.y + info._y_offset - info.vertical_scroll,
                 )
                 if abs_mouse_pos == app.mouse_position:
-                    row_col_vals = rowcol_to_yx.values()
-                    y_min, x_min = min(row_col_vals)
-                    y_max, x_max = max(row_col_vals)
-                    app.mouse_limits = WritePosition(
-                        xpos=x_min,
-                        ypos=y_min,
-                        width=x_max - x_min + 1,
-                        height=y_max - y_min + 1,
-                    )
+                    if (screen := app.renderer._last_screen) is not None and (
+                        wp := screen.visible_windows_to_write_positions.get(self.window)
+                    ) is not None:
+                        app.mouse_limits = wp
                     return self.hover(row)
                 else:
                     # Clear mouse limits if mouse is outside control
