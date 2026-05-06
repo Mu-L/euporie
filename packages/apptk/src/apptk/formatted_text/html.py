@@ -3853,7 +3853,7 @@ class RichHTML:
                         log.debug("File %s loaded", url)
                         self._url_cbs[url](result)
                     else:
-                        log.warning("Error loading %s", url)
+                        log.warning("Error loading %s: %r", url, result)
 
         # Reset all nodes so they will update with the new CSS from assets
         if self.defer_assets:
