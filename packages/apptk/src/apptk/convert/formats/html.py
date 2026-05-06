@@ -60,7 +60,7 @@ async def markdown_to_html_markdown_it(
     rows: int | None = None,
     fg: str | None = None,
     bg: str | None = None,
-    syntax_theme: str = "euporie",
+    syntax_theme: str = "default",
     **kwargs: Any,
 ) -> str:
     """Convert markdown to HTML using :py:mod:`markdownit_py`."""
