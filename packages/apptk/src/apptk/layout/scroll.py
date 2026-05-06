@@ -317,7 +317,8 @@ class ScrollingContainer(Container):
 
             # Refresh the child if there was a response
             if response is None:
-                child.invalidate()
+                if child:
+                    child.invalidate()
                 return response
 
             if response is NotImplemented:
