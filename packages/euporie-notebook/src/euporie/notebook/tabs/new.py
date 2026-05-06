@@ -104,9 +104,8 @@ class NewTab(Tab):
             self._status,
         )
 
-        tip = random.choice(TIPS)  # noqa: S311
         tip_display = Display(
-            Datum(tip, format="markdown"),
+            Datum(random.choice(TIPS), format="markdown"),  # noqa: S311
             wrap_lines=True,
             width=Dimension(preferred=0),
         )
@@ -156,11 +155,8 @@ class NewTab(Tab):
                                 cmds_section,
                                 HSplit(
                                     [
-                                        Box(
-                                            logo_medium,
-                                            padding_top=Dimension(max=1),
-                                            padding_bottom=Dimension(max=1),
-                                        ),
+                                        Window(height=0),
+                                        logo_medium,
                                         recent_files_section,
                                     ],
                                     padding=Dimension(max=1),

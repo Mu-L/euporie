@@ -16,12 +16,12 @@ logo_medium = Window(
             ("fg:white", "•"),
             ("fg:darkred", "▗▆██▆▖"),
             ("fg:yellow", "*"),
-            ("", "       \n"),
+            ("", "             \n"),
             ("", " "),
             ("fg:darkred", "████"),
             ("fg:darkred bg:black reverse", "●"),
             ("fg:darkred", "█"),
-            ("bold", " euporie\n"),
+            ("bold", " euporie      \n"),
             ("fg:orange", "."),
             ("fg:darkred", "▝🮅██🮅▘"),
             ("", "    "),
@@ -29,14 +29,14 @@ logo_medium = Window(
         ]
     ),
     height=3,
-    dont_extend_width=True,
+    dont_extend_width=False,
     wrap_lines=False,
-    align=WindowAlign.LEFT,
+    align=WindowAlign.CENTER,
 )
 
 """
-    ⢠⣶⣿⣿⣶⡄  ▗▆██▆▖  ▗▆██▆▖  🭊🭂██🭍🬿  🭉🭂██🭍🬾  🬞🬹██🬹🬏
-    ⣿⣿⣿⣿⣉⣿  ████𜶮█  ████●█  ████●█  ▐███●▌  🬫██🯩🯫🬛
-    ⠘⠿⣿⣿⠿⠃  ▝🮅██🮅▘  ▝🮅██🮅▘  🭥🭓██🭞🭚  🭤🭓██🭞🭙  🬁🬎██🬎🬀
+    ⢠⣶⣿⣿⣶⡄  ▗▆██▆▖  ▗▆██▆▖  🭊🭂██🭍🬿  🭉🭂███🭍🬾  🬞🬹██🬹🬏
+    ⣿⣿⣿⣿⣉⣿  ████𜶮█  ████●█  ████●█  ▐███🯩🯫▌  🬫██🯩🯫🬛
+    ⠘⠿⣿⣿⠿⠃  ▝🮅██🮅▘  ▝🮅██🮅▘  🭥🭓██🭞🭚  🭤🭓███🭞🭙  🬁🬎██🬎🬀
 
 """
