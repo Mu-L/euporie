@@ -22,6 +22,7 @@ __all__ = [
 
 _LOOPS: dict[str, asyncio.AbstractEventLoop] = {}
 _THREADS: dict[str, threading.Thread] = {}
+_BACKGROUND_LOOPS: set[asyncio.AbstractEventLoop] = set()
 
 
 def get_or_create_loop(name: str) -> asyncio.AbstractEventLoop:
@@ -48,6 +49,7 @@ def get_or_create_loop(name: str) -> asyncio.AbstractEventLoop:
     # Create a new event loop and thread
     loop = asyncio.new_event_loop()
     _LOOPS[name] = loop
+    _BACKGROUND_LOOPS.add(loop)
 
     def _run_loop() -> None:
         """Set the loop and run it forever."""
@@ -104,8 +106,9 @@ def run_coro_sync(
             loop.run_until_complete(asyncio.sleep(0))
         return task.result()
 
-    # Check if the loop is running (in another thread)
-    if loop.is_running():
+    # Check if this is a background thread loop (always use threadsafe)
+    # or if the loop is running (in another thread)
+    if loop in _BACKGROUND_LOOPS or loop.is_running():
         # Loop is running in a background thread, use threadsafe scheduling
         future = asyncio.run_coroutine_threadsafe(coro, loop)
         return future.result()
