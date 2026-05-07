@@ -17,6 +17,10 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+# Fix mouse event regexes to accept negative values (as sent by ghostty)
+_mouse_event_re = re.compile("^" + re.escape("\x1b[") + r"(<?(?:-?[\d;])+[mM]|M...)\Z")
+_mouse_event_prefix_re = re.compile("^" + re.escape("\x1b[") + r"(<?[-\d;]*|M.{0,2})\Z")
+
 
 class _IsPrefixOfLongerMatchCache(ptk_vt100_parser._IsPrefixOfLongerMatchCache):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -46,7 +50,7 @@ class _IsPrefixOfLongerMatchCache(ptk_vt100_parser._IsPrefixOfLongerMatchCache):
             # (hard coded) If this could be a prefix of a CPR response, return True.
             ptk_vt100_parser._cpr_response_prefix_re.match(prefix)
             # True if this could be a mouse event sequence
-            or ptk_vt100_parser._mouse_event_prefix_re.match(prefix)
+            or _mouse_event_prefix_re.match(prefix)
             # True if this could be the prefix of an expected escape sequence
             or prefix in self._ansi_sequence_prefixes
             # If this could be a prefix of any other escape sequence, return True
