@@ -638,6 +638,30 @@ class MenuContainer(PtkMenuContainer):
 
         return base_width + max_extra
 
+    def _get_menu(self, level: int) -> MenuItem:
+        """Get the menu item at the given depth level.
+
+        This overrides prompt_toolkit's _get_menu to account for hidden items.
+        The indices in self.selected_menu correspond to positions in the
+        visible (non-hidden) children list, not the full children list.
+
+        Args:
+            level: The depth level to retrieve (0 = top-level menu item).
+
+        Returns:
+            The MenuItem at the specified depth.
+        """
+        menu = self.menu_items[self.selected_menu[0]]
+        for i, index in enumerate(self.selected_menu[1:], 1):
+            visible_children = [c for c in menu.children if not c.hidden()]
+            if i > level:
+                break
+            if index < len(visible_children):
+                menu = visible_children[index]
+            else:
+                break
+        return menu
+
     def refocus(self) -> None:
         """Focus the appropriate container based on menu selection state.
 

@@ -93,7 +93,6 @@ class CompletionsMenuControl(PtkCompletionsMenuControl):
                     )
                 )
                 output.append((f"{style} class:menu-border", grid.MID_RIGHT))
-                log.debug(output)
 
                 # Apply mouse handler
                 return [
