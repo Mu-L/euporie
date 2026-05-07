@@ -298,7 +298,7 @@ class SideBar:
         self._drag_start_x = None
         # Stop capturing all mouse events
         app.mouse_limits = None
-        return None
+        return NotImplemented
 
     @property
     def width(self) -> int:
