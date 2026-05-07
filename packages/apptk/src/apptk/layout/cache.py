@@ -21,12 +21,14 @@ from apptk.layout.screen import Screen, WritePosition
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from typing import Any, TypeVar
 
     from apptk.key_binding.key_bindings import NotImplementedOrNone
     from apptk.layout.containers import AnyContainer
     from apptk.layout.dimension import Dimension
     from apptk.utils import Event
 
+    T = TypeVar("T", bound=Any)
     MouseHandler = Callable[[MouseEvent], object]
 
 log = logging.getLogger(__name__)
@@ -402,10 +404,33 @@ class CachedContainer(Container):
 
         # Copy deferred floats, and update any references to the CachedContainer's
         # internal screen in any partial functions
+        def _transform(arg: T) -> T:
+            if isinstance(arg, Screen):
+                return screen
+            elif isinstance(arg, WritePosition):
+                return WritePosition(
+                    xpos=arg.xpos + left,
+                    ypos=arg.ypos + top,
+                    width=arg.width,
+                    height=arg.height,
+                    # Set bbox to crop float to visible area
+                    bbox=DiInt(
+                        top=max(arg.bbox.top, rows.start - arg.ypos),
+                        right=max(arg.bbox.right, arg.width - cols.stop),
+                        bottom=max(
+                            arg.bbox.bottom, arg.height - (rows.stop - arg.ypos)
+                        ),
+                        left=max(arg.bbox.left, arg.width - (cols.stop - arg.xpos)),
+                    ),
+                )
+            else:
+                return arg
+
         for z_index, func in self.screen._draw_float_functions:
             if isinstance(func, partial):
-                args = [screen if isinstance(arg, Screen) else arg for arg in func.args]
-                func = partial(func.func, *args, **func.keywords)
+                args = [_transform(arg) for arg in func.args]
+                kwargs = {k: _transform(arg) for k, arg in func.keywords.items()}
+                func = partial(func.func, *args, **kwargs)
             screen._draw_float_functions.append((z_index, func))
 
     def get_children(self) -> list[Container]:
