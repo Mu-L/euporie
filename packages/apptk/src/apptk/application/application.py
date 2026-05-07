@@ -266,6 +266,10 @@ class Application(PtkApplication, Generic[_AppResult]):
 
         async def _do_resize() -> None:
             await asyncio.sleep(0.05)
+            # Reset the cached pixel size so SGR pixel mouse positioning
+            # uses correct cell dimensions after the resize.
+            self.output.reset_pixel_size()
+            self.output.ask_for_pixel_size()
             super(Application, self)._on_resize()
 
         self._resize_task = self.create_background_task(_do_resize())

@@ -37,6 +37,9 @@ class Output(PtkOutput, metaclass=ABCMeta):
     def set_pixel_size(self, px: int, py: int) -> None:
         """Set terminal pixel dimensions."""
 
+    def reset_pixel_size(self) -> None:
+        """Reset the cached pixel size so it is re-read on next access."""
+
     @property
     def cell_pixel_size(self) -> Size:
         """Get the pixel size of a single terminal cell."""

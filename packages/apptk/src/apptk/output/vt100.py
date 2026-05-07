@@ -295,6 +295,13 @@ class Vt100_Output(PtkVt100_Output):
         """Set terminal pixel dimensions."""
         self._pixel_size = (px, py)
 
+    def reset_pixel_size(self) -> None:
+        """Reset the cached pixel size so it is re-read on next access."""
+        try:
+            del self._pixel_size
+        except AttributeError:
+            pass
+
     def write_raw(self, data: str) -> None:
         """Write raw data to output."""
         self._buffer.append(data)
