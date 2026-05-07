@@ -246,6 +246,13 @@ class Application(PtkApplication, Generic[_AppResult]):
         except (OSError, ValueError):
             pass
 
+    async def _poll_output_size(self) -> None:
+        """Disable terminal size polling if we successfully attached SIGWINCH."""
+        handlers = getattr(self.loop, "_signal_handlers", {})
+        sigwinch = getattr(signal, "SIGWINCH", None)
+        if sigwinch in handlers:
+            self.terminal_size_polling_interval = None
+        await super()._poll_output_size()
 
     def _on_resize(self) -> None:
         """Debounce resize events.
