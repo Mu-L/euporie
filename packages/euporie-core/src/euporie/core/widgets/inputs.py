@@ -307,7 +307,7 @@ class KernelInput(TextArea):
         right_margins = [OverflowMargin()]
         self.window = Window(
             height=lambda: (
-                height or D(min=1) if self.buffer.multiline() else D.exact(1)
+                height or (D(min=1) if self.buffer.multiline() else D.exact(1))
             ),
             width=width,
             dont_extend_height=dont_extend_height,
