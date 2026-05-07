@@ -61,8 +61,8 @@ def test_distribute_dimensions_with_fixed_and_flexible() -> None:
         # Fixed size dimension
         DimensionTuple(min=5, max=5, preferred=5),
         # Two flexible dimensions with no constraints
-        DimensionTuple(min=0, max=999, preferred=0),
-        DimensionTuple(min=0, max=999, preferred=0),
+        DimensionTuple(min=0, max=999999, preferred=0),
+        DimensionTuple(min=0, max=999999, preferred=0),
     )
     # Total space is 15, with 5 taken by fixed dimension,
     # remaining 10 should be split evenly between the two flexible dimensions

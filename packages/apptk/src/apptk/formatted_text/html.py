@@ -5213,7 +5213,7 @@ class RichHTML:
         if element.marker is not None:
             marker_ft = await self.render_element(
                 element.marker,
-                available_width=99999,
+                available_width=999999,
                 available_height=theme.available_height,
                 left=0,
                 fill=False,

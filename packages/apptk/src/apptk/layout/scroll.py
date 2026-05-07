@@ -436,7 +436,7 @@ class ScrollingContainer(Container):
 
             # Update the target height
             target = self.get_child(target_idx)
-            target.render(available_width, available_height)
+            target.render(available_width, 999999)
             target_height = target.height
 
             # If anchoring to the top, we can use the new offset as the new child position
@@ -492,7 +492,7 @@ class ScrollingContainer(Container):
             selected_child = self._selected_children[0]
             selected_child.render(
                 available_width=available_width,
-                available_height=available_height,
+                available_height=999999,
                 style=f"{parent_style} {self.style}",
             )
             if cursor_position := selected_child.screen.cursor_positions.get(
@@ -540,7 +540,7 @@ class ScrollingContainer(Container):
             child = self.get_child(i)
             child.render(
                 available_width=available_width,
-                available_height=available_height,
+                available_height=999999,
                 style=f"{parent_style} {self.style}",
                 start=line,
             )
@@ -586,7 +586,7 @@ class ScrollingContainer(Container):
             child = self.get_child(i)
             child.render(
                 available_width=available_width,
-                available_height=available_height,
+                available_height=999999,
                 style=f"{parent_style} {self.style}",
                 end=line,
             )

@@ -248,7 +248,9 @@ class LineStyle:
 NoLine = LineStyle("None", rank=(0, 0), visible=False)
 # Equivalent to setting the border-stype to "hidden"
 # - takes precedence over all other conflicting borders.
-InvisibleLine = LineStyle("Invisible", rank=(9999, 9999), parent=NoLine, visible=False)
+InvisibleLine = LineStyle(
+    "Invisible", rank=(999999, 999999), parent=NoLine, visible=False
+)
 
 AsciiLine = LineStyle("Ascii", rank=(1, 0))
 ThinLine = LineStyle("Thin", rank=(1, 4), parent=AsciiLine)

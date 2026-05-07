@@ -263,7 +263,7 @@ class ANSI(PtkANSI):
                     params.append(main_param)
             else:
                 if part:
-                    params.append(min(int(part), 9999))
+                    params.append(min(int(part), 999999))
 
         if params:
             self._select_graphic_rendition(params)
@@ -406,12 +406,12 @@ class ANSI(PtkANSI):
                         if char.isdigit():
                             current += char
                         else:
-                            params.append(min(int(current or 0), 9999))
+                            params.append(min(int(current or 0), 999999))
                             if char == ";":
                                 current = ""
                         char = yield
                     if current:
-                        params.append(min(int(current or 0), 9999))
+                        params.append(min(int(current or 0), 999999))
                     # then any number of "intermediate bytes"
                     while 0x20 <= ord(char) <= 0x2F:
                         sequence += char

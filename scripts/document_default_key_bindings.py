@@ -84,7 +84,7 @@ classes_with_commands = get_classes_with_commands()
 sections = {}
 bindings_by_group = {}
 
-available_width = Dimension(max=9999)
+available_width = Dimension(max=999999)
 
 for cls in classes_with_commands:
     section_title = dedent(cls.__doc__).strip().split("\n")[0].rstrip(".")

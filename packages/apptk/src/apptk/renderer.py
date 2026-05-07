@@ -546,7 +546,7 @@ class Renderer(PtkRenderer):
         # Expand size if required
         output_size = size
         if self.extend_height():
-            output_size = Size(9999999, output_size.columns)
+            output_size = Size(999999, output_size.columns)
         if self.extend_width():
             output_size = Size(size.rows, output_size.columns + 1)
 
