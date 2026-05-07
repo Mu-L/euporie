@@ -7,6 +7,7 @@ import asyncio.exceptions
 import io
 import logging
 import os
+import signal
 from typing import TYPE_CHECKING, Generic
 
 from apptk.application.current import set_app
@@ -144,6 +145,9 @@ class Application(PtkApplication, Generic[_AppResult]):
         self.mouse_limits: WritePosition | None = None
         self.mouse_position = Point(0, 0)
 
+        # Debounced resize task
+        self._resize_task: asyncio.Task[None] | None = None
+
     @property
     def title(self) -> str:
         """The application's title."""
@@ -241,6 +245,23 @@ class Application(PtkApplication, Generic[_AppResult]):
                 os.read(fd, 4096)
         except (OSError, ValueError):
             pass
+
+
+    def _on_resize(self) -> None:
+        """Debounce resize events.
+
+        When the terminal is resized rapidly (e.g. dragging a window edge),
+        many SIGWINCH signals fire in quick succession. This coalesces them
+        and only performs the expensive erase/redraw after a short quiet period.
+        """
+        if self._resize_task is not None:
+            self._resize_task.cancel()
+
+        async def _do_resize() -> None:
+            await asyncio.sleep(0.05)
+            super(Application, self)._on_resize()
+
+        self._resize_task = self.create_background_task(_do_resize())
 
 
 class _CombinedRegistry(_PtkCombinedRegistry, Generic[_AppResult]):
