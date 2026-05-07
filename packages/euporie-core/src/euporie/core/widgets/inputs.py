@@ -186,7 +186,7 @@ class KernelInput(TextArea):
         if input_processors is None:
             input_processors = []
 
-        # Writeable attributes.
+        # Writable attributes.
         self.completer = completer
         self.complete_while_typing = Condition(
             lambda: app.config.autocomplete
