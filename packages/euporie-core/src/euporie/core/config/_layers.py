@@ -11,7 +11,6 @@ from ast import literal_eval
 from typing import TYPE_CHECKING, Any
 
 import tomlkit
-from tomlkit.items import Table
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -137,7 +136,7 @@ class TomlFileLayer(Layer):
         Args:
             settings: The settings to load values for.
         """
-        doc = self._load_toml()
+        doc = self._load_toml().unwrap()
         if self._namespace is not None:
             raw = self._get_app_values(doc)
         else:
@@ -186,7 +185,7 @@ class TomlFileLayer(Layer):
             tomlkit.dump(doc, f)
 
     def _get_global_values(
-        self, doc: tomlkit.TOMLDocument, settings: dict[str, Setting]
+        self, doc: dict[str, Any], settings: dict[str, Setting]
     ) -> dict[str, Any]:
         """Extract top-level values from a TOML document.
 
@@ -195,8 +194,8 @@ class TomlFileLayer(Layer):
         be app-namespace sections and are skipped.
 
         Args:
-            doc: The TOML document.
-            settings: Known settings, used to distinguish setting tables
+            doc: The unwrapped TOML document.
+            settings: Known settings, used to distinguish setting dicts
                 from namespace sections.
 
         Returns:
@@ -205,20 +204,20 @@ class TomlFileLayer(Layer):
         return {
             key: value
             for key, value in doc.items()
-            if not isinstance(value, (dict, Table)) or key in settings
+            if not isinstance(value, dict) or key in settings
         }
 
-    def _get_app_values(self, doc: tomlkit.TOMLDocument) -> dict[str, Any]:
+    def _get_app_values(self, doc: dict[str, Any]) -> dict[str, Any]:
         """Extract app-specific values from the TOML document.
 
         Args:
-            doc: The TOML document.
+            doc: The unwrapped TOML document.
 
         Returns:
             Dictionary of app-specific values.
         """
         section = doc.get(self._namespace, {})
-        if isinstance(section, (dict, Table)):
+        if isinstance(section, dict):
             return dict(section)
         return {}
 
