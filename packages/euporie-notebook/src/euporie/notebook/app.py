@@ -371,7 +371,10 @@ class NotebookApp(BaseApp):
                     top_bar,
                     VSplit(
                         [
-                            self.side_bar,
+                            ConditionalContainer(
+                                self.side_bar,
+                                filter=self.config.filters.show_side_bar,
+                            ),
                             HSplit(
                                 [
                                     DynamicContainer(self.tab_container),

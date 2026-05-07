@@ -174,8 +174,6 @@ class SideBar:
             on_resize: Optional callback called when the sidebar is resized.
             on_change: Optional callback called when the active panel changes.
         """
-        from apptk.application.current import get_app
-
         self._width = width
         self.on_resize: Event[SideBar] = Event(self, on_resize)
         self.on_change: Event[SideBar] = Event(self, on_change)
@@ -202,67 +200,60 @@ class SideBar:
         self._drag_start_x: int | None = None
         self._start_width: int = 0
 
-        self.container = ConditionalContainer(
-            VSplit(
-                [
+        self.container = VSplit(
+            [
+                VSplit(
+                    [
+                        self.side_bar_buttons,
+                    ],
+                ),
+                ConditionalContainer(
                     VSplit(
                         [
-                            self.side_bar_buttons,
-                        ],
-                    ),
-                    ConditionalContainer(
-                        VSplit(
-                            [
-                                Line(
-                                    char="▏",
-                                    width=1,
-                                    style="class:side_bar,border",
-                                    collapse=True,
-                                ),
+                            Line(
+                                char="▏",
+                                width=1,
+                                style="class:side_bar,border",
+                                collapse=True,
+                            ),
+                            HSplit(
+                                [
+                                    DynamicContainer(
+                                        lambda: panels[self.side_bar_buttons.index or 0]
+                                    ),
+                                ],
+                                width=lambda: self._width,
+                            ),
+                            # Create the resize handle for the sidebar border
+                            MouseHandlerWrapper(
                                 HSplit(
                                     [
-                                        DynamicContainer(
-                                            lambda: panels[
-                                                self.side_bar_buttons.index or 0
-                                            ]
+                                        Window(
+                                            char="▐",
+                                            width=1,
+                                            style="class:side_bar,border",
+                                        ),
+                                        Window(
+                                            char="⢸",
+                                            width=1,
+                                            height=4,
+                                            style="class:side_bar,border,handle",
+                                        ),
+                                        Window(
+                                            char="▐",
+                                            width=1,
+                                            style="class:side_bar,border",
                                         ),
                                     ],
-                                    width=lambda: (
-                                        Dimension(preferred=self._width).preferred
-                                    ),
                                 ),
-                                # Create the resize handle for the sidebar border
-                                MouseHandlerWrapper(
-                                    HSplit(
-                                        [
-                                            Window(
-                                                char="▐",
-                                                width=1,
-                                                style="class:side_bar,border",
-                                            ),
-                                            Window(
-                                                char="⢸",
-                                                width=1,
-                                                height=4,
-                                                style="class:side_bar,border,handle",
-                                            ),
-                                            Window(
-                                                char="▐",
-                                                width=1,
-                                                style="class:side_bar,border",
-                                            ),
-                                        ],
-                                    ),
-                                    handler=self._resize_drag_handler,
-                                ),
-                            ],
-                        ),
-                        filter=~pane_hidden,
+                                handler=self._resize_drag_handler,
+                            ),
+                        ],
                     ),
-                ],
-                style="class:side_bar",
-            ),
-            filter=get_app().config.filters.show_side_bar,
+                    filter=~pane_hidden,
+                ),
+            ],
+            style="class:side_bar",
         )
 
     def _resize_drag_handler(self, mouse_event: MouseEvent) -> NotImplementedOrNone:
@@ -292,8 +283,7 @@ class SideBar:
                     # Calculate width change based on global mouse position
                     dx = gx - self._drag_start_x
                     new_width = max(10, min(200, self._start_width + dx))
-                    self._width = new_width
-                    self.on_resize.fire()
+                    self.width = new_width
                     # Update mouse capture position to match constrained width
                     actual_dx = new_width - self._start_width
                     app.mouse_limits = WritePosition(
