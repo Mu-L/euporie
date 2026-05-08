@@ -30,7 +30,7 @@ def _force_quit() -> None:
 
 @add_cmd(
     keys=["c-o"],
-    menu_title="Open File…",
+    menu_title="Open file…",
     aliases=["open", "o"],
     icon="",
     style="class:purple",

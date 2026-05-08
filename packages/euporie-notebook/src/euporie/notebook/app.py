@@ -109,6 +109,7 @@ class NotebookApp(BaseApp):
         core_settings.autocomplete,
         core_settings.autosuggest,
         core_settings.autoinspect,
+        core_settings.autopair,
         core_settings.external_editor,
         # Appearance
         core_settings.show_status_bar,
@@ -578,14 +579,17 @@ class NotebookApp(BaseApp):
                 "Settings",
                 children=[
                     MenuItem(
-                        "UI Elements",
+                        "UI elements",
                         children=[
                             MenuItem.from_cmd("switch-background-pattern"),
                             MenuItem.from_cmd("toggle-show-cell-borders"),
+                            MenuItem.from_cmd("toggle-show-top-bar"),
                             MenuItem.from_cmd("toggle-always-show-tab-bar"),
                             MenuItem.from_cmd("toggle-show-side-bar"),
                             MenuItem.from_cmd("toggle-show-status-bar"),
                             MenuItem.from_cmd("toggle-show-scroll-bar"),
+                            MenuItem.from_cmd("toggle-show-icons"),
+                            MenuItem.from_cmd("toggle-show-shadows"),
                             MenuItem.from_cmd("toggle-multiplexer-passthrough"),
                         ],
                         description="Turn elements of euporie's interface on or off",
@@ -615,6 +619,7 @@ class NotebookApp(BaseApp):
                             MenuItem.from_cmd("toggle-autoformat"),
                             MenuItem.from_cmd("toggle-autocomplete"),
                             MenuItem.from_cmd("toggle-autoinspect"),
+                            MenuItem.from_cmd("toggle-autopair"),
                         ],
                         description="Turn code assistance tools on or off",
                     ),
