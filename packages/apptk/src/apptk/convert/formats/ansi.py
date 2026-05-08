@@ -217,6 +217,46 @@ async def latex_to_ansi_utftex(
 @register(
     from_="latex",
     to="ansi",
+    filter_=have_modules("unicodeitplus"),
+    weight=0,
+)
+async def latex_to_ansi_py_unicodeitplus(
+    datum: Datum,
+    cols: int | None = None,
+    rows: int | None = None,
+    fg: str | None = None,
+    bg: str | None = None,
+    **kwargs: Any,
+) -> str:
+    """Convert LaTeX to ANSI using :py:mod:`unicodeitplus`."""
+    import unicodeitplus
+
+    return unicodeitplus.replace(datum.data)
+
+
+@register(
+    from_="latex",
+    to="ansi",
+    filter_=have_modules("unicodeit"),
+    weight=0,
+)
+async def latex_to_ansi_py_unicodeit(
+    datum: Datum,
+    cols: int | None = None,
+    rows: int | None = None,
+    fg: str | None = None,
+    bg: str | None = None,
+    **kwargs: Any,
+) -> str:
+    """Convert LaTeX to ANSI using :py:mod:`unicodeit`."""
+    import unicodeit
+
+    return unicodeit.replace(datum.data)
+
+
+@register(
+    from_="latex",
+    to="ansi",
     filter_=have_modules("pylatexenc"),
     weight=0,
 )
