@@ -45,6 +45,7 @@ class NewTab(Tab):
     def __init__(self, app: BaseApp, path: Path | None = None) -> None:
         """Replace the main tab container."""
         super().__init__(app, path)
+        self._tip_index = random.randrange(len(TIPS))  # noqa: S311
         self.container = self.load_container()
 
     def load_container(self) -> AnyContainer:
@@ -105,7 +106,7 @@ class NewTab(Tab):
         )
 
         tip_display = Display(
-            Datum(random.choice(TIPS), format="markdown"),  # noqa: S311
+            Datum(TIPS[self._tip_index], format="markdown"),
             wrap_lines=True,
             width=Dimension(preferred=0),
         )
@@ -115,7 +116,8 @@ class NewTab(Tab):
                 mouse_event.button == MouseButton.LEFT
                 and mouse_event.event_type == MouseEventType.MOUSE_UP
             ):
-                tip_display.datum = Datum(random.choice(TIPS), format="markdown")  # noqa: S311
+                self._tip_index = (self._tip_index + 1) % len(TIPS)
+                tip_display.datum = Datum(TIPS[self._tip_index], format="markdown")
                 return None
             return NotImplemented
 

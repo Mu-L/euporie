@@ -2408,7 +2408,7 @@ _BROWSER_CSS: dict[Filter, CssRuleSet] = {
             ((CssSelector(item="a"),),): {
                 "display": "inline",
                 "text_decoration": "underline",
-                "color": "#0000FF",
+                "color": "ansiblue",
             },
             ((CssSelector(item="b"),), (CssSelector(item="strong"),)): {
                 "display": "inline",
