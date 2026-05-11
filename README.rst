@@ -48,7 +48,7 @@ You can install euporie with `uv <https://docs.astral.sh/uv/>`_  (recommended), 
    $ # OR
    $ python -m pip install --user euporie
 
-You can also try euporie online `here <https://mybinder.org/v2/gh/joouha/euporie-binder/HEAD?urlpath=%2Feuporie%2F>`_.
+You can also try euporie online `here <https://euporie.readthedocs.io/en/latest/_static/lite.html>`_.
 
 ********
 Features
