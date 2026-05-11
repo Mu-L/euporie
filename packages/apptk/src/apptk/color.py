@@ -32,9 +32,14 @@ class Color(str):
     hex: str
 
     def __new__(cls, value: str, name: str = "") -> Color:
-        """Create a new color from a hex code."""
+        """Create a new color from a hex code or ANSI color name."""
         if isinstance(value, Color):
             return value
+        # Check for named ANSI colors (e.g. "ansiblue", "ansired"), case-insensitive
+        if (lower_value := value.lower()) in ANSI_COLORS_TO_RGB:
+            r, g, b = ANSI_COLORS_TO_RGB[lower_value]
+            name = name or value
+            value = f"#{r:02x}{g:02x}{b:02x}"
         # Perform validation
         parsed = value.upper()
         if parsed[0] != "#":
