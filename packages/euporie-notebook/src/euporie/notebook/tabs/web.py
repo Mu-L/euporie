@@ -93,6 +93,15 @@ class WebTab(Tab):
         # Focus the webview
         self.app.layout.current_control = self.webview
 
+    def read_file(self, path: Path) -> None:
+        """Read web content from a path.
+
+        Args:
+            path: A path from which to read the file
+
+        """
+        self.webview.load_url(path)
+
     def load_container(self) -> AnyContainer:
         """Abcract method for loading the notebook's main container."""
         assert self.path is not None

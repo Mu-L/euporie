@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from typing import TYPE_CHECKING, ClassVar
 
-from apptk.layout.containers import MarginContainer, VSplit
+from apptk.layout.containers import MarginContainer, VSplit, to_container
 from apptk.layout.dimension import Dimension
 from apptk.layout.margins import ScrollbarMargin
-from apptk.layout.scroll import ScrollingContainer
 
 from euporie.core.tabs.base import Tab
 from euporie.core.widgets.tree import JsonView
@@ -36,20 +34,32 @@ class JsonTab(Tab):
     def __init__(self, app: BaseApp, path: Path | None = None) -> None:
         """Call when the tab is created."""
         super().__init__(app, path)
+        self.data = {}
 
-        # Load file and container in background
-        if self.path is not None:
+        async def _load() -> None:
+            # Load notebook file
+            if self.path is not None:
+                self.read_file(self.path)
+            # Load and focus container
+            prev = self.container
+            self.container = self.load_container()
+            # Update the focus if the old container had focus
+            if self.app.layout.has_focus(prev):
+                self.focus()
 
-            def _load() -> None:
-                self.container = self.load_container()
-                self.app.layout.focus(self.container)
-                self.app.invalidate()
+        self.app.create_background_task(_load())
 
-            app.create_background_task(asyncio.to_thread(_load))
-
-    def __pt_status__(self) -> StatusBarFields | None:
-        """Return a list of statusbar field values shown then this tab is active."""
-        return ([str(self.path)], [])
+    def load_container(self) -> AnyContainer:
+        """Actually load the main container."""
+        view = JsonView(self.data, title=self.title, expanded=True)
+        return VSplit(
+            [
+                view,
+                MarginContainer(ScrollbarMargin(), target=to_container(view)),
+            ],
+            width=Dimension(weight=1),
+            height=Dimension(weight=1),
+        )
 
     @property
     def title(self) -> str:
@@ -59,19 +69,17 @@ class JsonTab(Tab):
         else:
             return "<file>"
 
-    def load_container(self) -> AnyContainer:
-        """Abcract method for loading the notebook's main container."""
-        assert self.path is not None
+    def read_file(self, path: Path) -> None:
+        """Read JSON data from a path.
 
-        data = json.load(self.path.open())
+        Args:
+            path: A path from which to read the file
 
-        return VSplit(
-            [
-                scroll := ScrollingContainer(
-                    children=[JsonView(data, title=self.path.name, expanded=True)]
-                ),
-                MarginContainer(ScrollbarMargin(), target=scroll),
-            ],
-            width=Dimension(weight=1),
-            height=Dimension(weight=1),
-        )
+        """
+        self.data.clear()
+        self.data.update(json.load(path.open()))
+        self.app.invalidate()
+
+    def __pt_status__(self) -> StatusBarFields | None:
+        """Return a list of statusbar field values shown then this tab is active."""
+        return ([str(self.path)], [])

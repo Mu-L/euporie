@@ -156,6 +156,19 @@ class Tab(metaclass=ABCMeta):
             f"File saving not implement for `{self.__class__.__name__}` tab"
         )
 
+    def read_file(self, path: Path) -> None:
+        """Read the tab's data from a path.
+
+        Not implemented in the base tab.
+
+        Args:
+            path: A path from which to read the file
+
+        """
+        raise NotImplementedError(
+            f"File reading not implemented for `{self.__class__.__name__}` tab"
+        )
+
     def __pt_searchables__(self) -> Sequence[Window]:
         """Return a list of searchable buffer controls for this tab.
 

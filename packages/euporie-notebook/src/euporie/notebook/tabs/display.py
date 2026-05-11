@@ -36,16 +36,21 @@ class DisplayTab(Tab):
     def __init__(self, app: BaseApp, path: Path | None = None) -> None:
         """Call when the tab is created."""
         super().__init__(app, path)
+        self.datum = Datum(
+            data="(No data to display)",
+            format="ansi",
+            path=self.path,
+        )
 
         # Load file and container in background
-        if self.path is not None:
+        def _load() -> None:
+            self.container = self.load_container()
+            if self.path is not None:
+                self.read_file(self.path)
+            self.app.layout.focus(self.container)
+            self.app.invalidate()
 
-            def _load() -> None:
-                self.container = self.load_container()
-                self.app.layout.focus(self.container)
-                self.app.invalidate()
-
-            app.create_background_task(asyncio.to_thread(_load))
+        app.create_background_task(asyncio.to_thread(_load))
 
     def __pt_status__(self) -> StatusBarFields | None:
         """Return a list of statusbar field values shown then this tab is active."""
@@ -64,11 +69,7 @@ class DisplayTab(Tab):
         assert self.path is not None
 
         self.display = Display(
-            Datum(
-                data=self.path.read_bytes(),
-                format=get_format(self.path),
-                path=self.path,
-            ),
+            self.datum,
             expand_height=True,
             focusable=True,
             focus_on_click=True,
@@ -83,6 +84,16 @@ class DisplayTab(Tab):
             width=Dimension(weight=1),
             height=Dimension(weight=1),
         )
+
+    def read_file(self, path: Path) -> None:
+        """Read file data from a path.
+
+        Args:
+            path: A path from which to read the file
+
+        """
+        self.datum = Datum(data=path.read_bytes(), format=get_format(path), path=path)
+        self.display.datum = self.datum
 
     def write_file(self, path: Path) -> None:
         """Write the file's text data to a path.

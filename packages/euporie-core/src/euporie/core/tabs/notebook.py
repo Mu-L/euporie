@@ -144,15 +144,28 @@ class BaseNotebook(KernelTab, metaclass=ABCMeta):
 
     # Notebook stuff
 
+    def read_file(self, path: Path) -> None:
+        """Read notebook data from a path.
+
+        Args:
+            path: A path from which to read the notebook
+
+        """
+        with path.open() as f:
+            self.json = read_nb(f, as_version=4)
+        # Ensure there is always at least one cell
+        if not self.json.setdefault("cells", []):
+            self.json["cells"] = [new_code_cell()]
+
     def load(self) -> None:
         """Load the notebook file from the file-system."""
         # Open json file, or load from passed json object
         if self.path is not None and self.path.exists():
-            with self.path.open() as f:
-                self.json = read_nb(f, as_version=4)
-        # Ensure there is always at least one cell
-        if not self.json.setdefault("cells", []):
-            self.json["cells"] = [new_code_cell()]
+            self.read_file(self.path)
+        else:
+            # Ensure there is always at least one cell
+            if not self.json.setdefault("cells", []):
+                self.json["cells"] = [new_code_cell()]
         self.loaded = True
         if callable(self._really_init_kernel):
             # Only call this once

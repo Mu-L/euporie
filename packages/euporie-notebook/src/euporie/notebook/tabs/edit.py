@@ -63,25 +63,38 @@ class EditorTab(KernelTab):
         # Read file
         self.load()
 
-    def load(self) -> None:
-        """Load the text file."""
+    def read_file(self, path: Path) -> None:
+        """Read text file data from a path.
+
+        Args:
+            path: A path from which to read the file
+
+        """
         try:
-            text = self.path.read_text() if self.path is not None else ""
+            text = path.read_text()
         except FileNotFoundError:
             text = ""
 
         # Set text
         self.input_box.text = text
-        self.input_box.buffer.on_text_changed += lambda b: setattr(self, "dirty", True)
-        self.input_box.read_only = False
-        self.loaded = True
 
         # Detect language
-        lexer = detect_lexer(text[:1000], self.path)
+        lexer = detect_lexer(text[:1000], path)
         if lexer:
             self._metadata = {"kernelspec": {"language": lexer.name.casefold()}}
         # Re-lex the file
         self.input_box.control._fragment_cache.clear()
+
+    def load(self) -> None:
+        """Load the text file."""
+        if self.path is not None:
+            self.read_file(self.path)
+        else:
+            self.input_box.text = ""
+
+        self.input_box.buffer.on_text_changed += lambda b: setattr(self, "dirty", True)
+        self.input_box.read_only = False
+        self.loaded = True
         self.app.invalidate()
 
     def close(self, cb: Callable | None = None) -> None:
