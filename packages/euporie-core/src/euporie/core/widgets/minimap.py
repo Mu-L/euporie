@@ -52,7 +52,7 @@ log = logging.getLogger(__name__)
 class MiniMapControl(UIControl):
     """A control to render minimaps for all buffers in the current tab."""
 
-    def __init__(self, hscale: float = 0.5, vscale: float = 0.25) -> None:
+    def __init__(self, hscale: float = 0.375, vscale: float = 0.75) -> None:
         """Initialize the control.
 
         Args:
@@ -305,10 +305,10 @@ class MiniMap:
     """A minimap widget displaying minimaps of all buffers in the current tab."""
 
     MIN_SCALE = 0.125
-    MAX_SCALE = 2.0
+    MAX_SCALE = 3.0
     SCALE_STEP = 0.125
 
-    def __init__(self, hscale: float = 0.25, vscale: float = 0.5) -> None:
+    def __init__(self, hscale: float = 0.375, vscale: float = 0.75) -> None:
         """Construct the widget.
 
         Args:
@@ -334,7 +334,7 @@ class MiniMap:
             show_borders=DiBool(True, True, True, False),
         )
         zoom_text = Label(
-            text=f"{self.control.vscale * 2}×",
+            text=f"{self.control.vscale / 0.75:.1f}×",
             width=5,
             dont_extend_height=True,
             dont_extend_width=True,
@@ -362,7 +362,7 @@ class MiniMap:
             style="class:minimap",
         )
         self.control.on_zoom += lambda c: setattr(
-            zoom_text, "text", f"{self.control.vscale * 2}×"
+            zoom_text, "text", f"{self.control.vscale / 0.75:.1f}×"
         )
 
     def zoom(self, direction: int) -> None:
