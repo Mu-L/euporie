@@ -899,7 +899,7 @@ class Cell:
     async def edit_in_editor(self) -> None:
         """Edit the cell in $EDITOR."""
         buffer = self.input_box.buffer
-        app = get_app()
+        app = self.kernel_tab.app
         edit_in_fg = False
 
         # Save VISUAL environment variable
