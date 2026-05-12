@@ -140,7 +140,7 @@ class NewTab(Tab):
                 on_open=self.app.open_file,
                 show_address_bar=False,
                 show_icons=config.filters.show_icons,
-                height=Dimension(min=3, max=10),
+                height=Dimension(min=3, max=11),
                 sort=False,
             ),
             title="Recent Files",
