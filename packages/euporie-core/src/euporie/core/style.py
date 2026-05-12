@@ -297,6 +297,7 @@ def cell_styles(cp: ColorPalette) -> dict[str, str]:
     """Generate notebook cell styles."""
     return {
         "kernel-input": f"fg:default bg:{cp.bg.more(0.02)}",
+        "kernel-input active": f"fg:default bg:{cp.bg.towards(cp.hl, 0.15)}",
         "cell border": f"fg:{cp.bg.more(0.25)}",
         "cell border cell.selection": f"fg:{cp.hl.more(0.2)}",
         "cell border edit": f"fg:{cp.hl.adjust(hue=-0.3333, rel=False)}",

@@ -166,6 +166,8 @@ class MiniMapControl(UIControl):
             buffers.update(self._get_buffers(tab))
             buffer_texts = tuple(buffer.document.text for buffer in buffers)
 
+        active_window = get_app().layout.current_window
+
         cache_key: Hashable = (
             buffer_texts,
             tuple(id(w) for w in buffers),
@@ -173,6 +175,7 @@ class MiniMapControl(UIControl):
             self.hscale,
             self.vscale,
             self.cursor_position,
+            id(active_window),
         )
 
         def get_content() -> tuple[UIContent, list[tuple[Window, int]]]:
@@ -182,6 +185,11 @@ class MiniMapControl(UIControl):
             for buffer, window in buffers.items():
                 text = buffer.document.text
                 minimap_lines = self._minimap_cache[text, self.hscale, self.vscale]
+
+                is_active = window is active_window
+                content_style = (
+                    "class:kernel-input,active" if is_active else "class:kernel-input"
+                )
 
                 # Add a separator between buffers, or top border of first buffer minimap
                 sep = "🮀" if lines else "▁"
@@ -195,7 +203,7 @@ class MiniMapControl(UIControl):
                     lines.append(
                         [
                             ("class:border", "🮇"),
-                            ("class:kernel-input", line),
+                            (content_style, line),
                             ("class:border", "▎"),
                         ]
                     )
