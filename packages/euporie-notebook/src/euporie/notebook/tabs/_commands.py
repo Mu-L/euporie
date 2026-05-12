@@ -623,7 +623,11 @@ async def _edit_in_external_editor() -> None:
     from euporie.notebook.tabs.notebook import Notebook
 
     if isinstance(nb := get_app().tab, Notebook):
-        await nb.cell.edit_in_editor()
+        config = nb.app.config
+        await nb.cell.input_box.buffer.open_in_editor(
+            validate_and_handle=config.run_after_external_edit,
+            cmd=config.external_editor or None,
+        )
 
 
 @add_cmd(

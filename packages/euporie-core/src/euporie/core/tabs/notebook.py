@@ -9,8 +9,8 @@ from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from apptk.application.edit import edit_in_editor
 from apptk.filters import Never
-from apptk.io import edit_in_editor
 
 from euporie.core.comm.registry import open_comm
 from euporie.core.kernel.base import MsgCallbacks
@@ -95,10 +95,7 @@ class BaseNotebook(KernelTab, metaclass=ABCMeta):
 
     def reset(self) -> None:
         """Reload the notebook file from the disk and re-render."""
-        # Restore selection after reset
-        if self.path is not None:
-            self._rendered_cells = {}
-            self.load()
+        self._rendered_cells = {}
         self.refresh()
 
     # KernelTab stuff

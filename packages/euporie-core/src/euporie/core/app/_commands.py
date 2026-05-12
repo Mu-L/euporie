@@ -82,6 +82,19 @@ def _clear_screen() -> None:
     get_app().renderer.clear()
 
 
+@add_cmd(filter=buffer_has_focus)
+async def _pipe_buffer(*cmd: str) -> None:
+    """Pipe the current buffer through an external command."""
+    app = get_app()
+    buffer = app.current_buffer
+    if cmd:
+        resolved_cmd = " ".join(cmd)
+    else:
+        resolved_cmd = getattr(app.config, "external_editor", None) or None
+    validate = getattr(app.config, "run_after_external_edit", False)
+    await buffer.open_in_editor(validate_and_handle=validate, cmd=resolved_cmd)
+
+
 @add_cmd(hidden=True, aliases=[""])
 def _go_to(event: KeyPressEvent, index: int = 0) -> None:
     """Go to a line or cell by number."""

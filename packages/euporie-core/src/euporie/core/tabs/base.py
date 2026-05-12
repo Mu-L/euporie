@@ -43,6 +43,7 @@ class Tab(metaclass=ABCMeta):
     commands = (
         "save-file",
         "refresh-tab",
+        "pipe-tab",
     )
 
     def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:

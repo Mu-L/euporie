@@ -7,6 +7,7 @@ from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING
 
+from apptk.application.edit import edit_in_editor
 from apptk.buffer import Buffer, ValidationState
 from apptk.commands import get_cmd
 from apptk.filters.app import (
@@ -16,7 +17,6 @@ from apptk.filters.app import (
 )
 from apptk.filters.base import Condition
 from apptk.filters.buffer import at_end_of_buffer
-from apptk.io import edit_in_editor
 from apptk.key_binding.key_bindings import KeyBindings
 from apptk.mouse_events import MouseEventType
 from apptk.utils import Event

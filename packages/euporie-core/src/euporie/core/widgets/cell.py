@@ -5,11 +5,9 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
-import os
 import re
 import weakref
 from functools import lru_cache, partial
-from pathlib import Path
 from typing import TYPE_CHECKING, cast
 from weakref import WeakKeyDictionary
 
@@ -50,6 +48,7 @@ from euporie.core.widgets.inputs import KernelInput, StdInput
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from pathlib import Path
     from typing import Any, Literal
 
     from apptk.border import GridStyle
@@ -895,81 +894,6 @@ class Cell:
         """Scroll the cell requesting input into view and render it before asking for input."""
         self.kernel_tab.select(self.index)
         self.stdin_box.get_input(prompt, password)
-
-    async def edit_in_editor(self) -> None:
-        """Edit the cell in $EDITOR."""
-        buffer = self.input_box.buffer
-        app = self.kernel_tab.app
-        edit_in_fg = False
-
-        # Save VISUAL environment variable
-        visual = os.environ.get("VISUAL")
-
-        if editor := app.config.external_editor:
-            if "{left}" in editor:
-                win = self.input_box.window
-
-                if (info := win.render_info) is not None:
-                    edit_in_fg = True
-
-                    margin_left = sum(
-                        [win._get_margin_width(m) for m in win.left_margins]
-                    )
-                    margin_right = sum(
-                        [win._get_margin_width(m) for m in win.right_margins]
-                    )
-                    top = info._y_offset
-                    left = info._x_offset - margin_left
-                    width = info.window_width + margin_left + margin_right
-                    height = min(app.output.get_size().rows, info.window_height)
-
-                else:
-                    left = top = 0
-                    height, width = app.output.get_size()
-
-                editor = editor.format(
-                    top=top,
-                    left=left,
-                    width=width,
-                    height=height,
-                    bottom=top + height,
-                    right=left + width,
-                )
-
-            # Override VISUAL environment variable
-            os.environ["VISUAL"] = editor
-
-        if edit_in_fg:
-            # Create a tempfile
-            if buffer.tempfile:
-                filename, cleanup_func = buffer._editor_complex_tempfile()
-            else:
-                filename, cleanup_func = buffer._editor_simple_tempfile()
-            try:
-                # Edit the temp file
-                success = buffer._open_file_in_editor(filename)
-                # Read content again.
-                if success:
-                    text = Path(filename).read_text()
-                    # Drop trailing newline
-                    if text.endswith("\n"):
-                        text = text[:-1]
-                    buffer.document = Document(text=text, cursor_position=len(text))
-                    # Run the cell if configured
-                    if app.config.run_after_external_edit:
-                        buffer.validate_and_handle()
-            finally:
-                # Clean up temp dir/file.
-                cleanup_func()
-
-        else:
-            await buffer.open_in_editor(
-                validate_and_handle=app.config.run_after_external_edit
-            )
-
-        # Restore VISUAL environment variable
-        if visual is not None:
-            os.environ["VISUAL"] = visual
 
     def close(self) -> None:
         """Signal that the cell is no longer present in the notebook."""
