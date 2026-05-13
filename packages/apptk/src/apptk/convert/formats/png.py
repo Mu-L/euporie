@@ -13,12 +13,14 @@ from apptk.convert.formats.common import (
     mermaid_rs_renderer_cmd,
 )
 from apptk.convert.registry import register
+from apptk.convert.utils import call_subproc
 from apptk.filters.environment import command_exists, have_modules
 
 if TYPE_CHECKING:
     from typing import Any
 
     from apptk.convert.datum import Datum
+
 
 register(
     from_="base64-png",
@@ -192,6 +194,54 @@ async def svg_to_png_py_cairosvg(
     data = datum.data
     markup = data.decode() if isinstance(data, bytes) else data
     return cairosvg.surface.PNGSurface.convert(markup, write_to=None)
+
+
+@register(
+    from_="latex",
+    to="png",
+    filter_=command_exists("pandoc", "typst"),
+)
+async def latex_to_png_pandoc_typst(
+    datum: Datum,
+    cols: int | None = None,
+    rows: int | None = None,
+    fg: str | None = None,
+    bg: str | None = None,
+    extend: str = "",
+    **kwargs: Any,
+) -> bytes | None:
+    """Render LaTeX as a PNG image using :command:`pandoc` and :command:`typst`.
+
+    Converts LaTeX to Typst markup via pandoc, then compiles the Typst
+    document to a PNG image using the typst compiler.
+    """
+    # Convert LaTeX to Typst via pandoc
+    typst_input = (
+        await call_subproc(
+            datum.data,
+            ["pandoc", "--from", "latex", "--to", "typst"],
+        )
+    ).decode()
+
+    # Build Typst page header
+    header_lines = [
+        "#set page(width: auto, height: auto, margin: (x: 2pt, y: 2pt), fill: none)",
+        "#set par(leading: 0pt)",
+        "#set block(spacing: 0pt)",
+        "#set math.equation(numbering: none)",
+    ]
+    if fg:
+        if len(fg) == 4:
+            fg = f"#{fg[1]}{fg[1]}{fg[2]}{fg[2]}{fg[3]}{fg[3]}"
+        header_lines.append(f'#set text(fill: rgb("{fg}"))')
+
+    typst_doc = "\n".join(header_lines) + "\n" + extend + typst_input
+
+    # Compile Typst to PNG
+    return await call_subproc(
+        typst_doc,
+        ["typst", "compile", "--format", "png", "-", "-"],
+    )
 
 
 register(
