@@ -211,7 +211,7 @@ class DisplayControl(UIControl):
             Tuple of (render_width, render_height) to pass to conversion.
         """
         max_cols, aspect = self.datum.cell_size()
-        natural_width = max_cols if max_cols else None
+        natural_width = max_cols or None
         natural_height = ceil(max_cols * aspect) if max_cols and aspect else None
 
         # Calculate render width
@@ -228,11 +228,12 @@ class DisplayControl(UIControl):
             render_height = None
 
         # If we have aspect ratio and only one dimension, calculate the other
-        _max_cols, aspect = self.datum.cell_size()
-        if aspect and render_width is not None and render_height is None:
-            render_height = ceil(render_width * aspect)
-        elif aspect and render_height is not None and render_width is None:
-            render_width = ceil(render_height / aspect) if aspect else None
+        # BUT if max_cols is zero, the aspect should not be used
+        if max_cols and aspect:
+            if render_width is not None and render_height is None:
+                render_height = ceil(render_width * aspect)
+            elif render_height is not None and render_width is None:
+                render_width = ceil(render_height / aspect) if aspect else None
 
         return render_width, render_height
 
@@ -246,6 +247,8 @@ class DisplayControl(UIControl):
         wrap_lines: bool = False,
     ) -> list[StyleAndTextTuples]:
         """Render the lines to display in the control."""
+        from apptk.layout.graphics import graphics_available
+
         ft = datum.convert(
             to="ft",
             cols=width,
@@ -262,13 +265,10 @@ class DisplayControl(UIControl):
             strip(line, left=False, right=True, only_unstyled=True)
             for line in split_lines(ft)
         ]
-        if width and height:
+        if width and height and graphics_available(self.datum.format):
             # Use the maximum of the requested render size and the actual text
             # dimensions so the graphic overlay fully covers the ASCII fallback
-            actual_width = max(
-                (fragment_list_width(line) for line in lines),
-                default=0,
-            )
+            actual_width = max((fragment_list_width(line) for line in lines), default=0)
             actual_height = len(lines)
             cover_width = max(width, actual_width)
             cover_height = max(height, actual_height)
@@ -376,6 +376,14 @@ class DisplayControl(UIControl):
         ]
 
         content_height = len(self.lines)
+
+        # Ensure we allocate enough space for the graphic overlay
+        from apptk.layout.graphics import graphics_available
+
+        if render_height is not None and graphics_available(self.datum.format):
+            content_height = max(content_height, render_height)
+
+        content_height = min(content_height, max_available_height)
 
         # Apply expand_height
         if self.expand_height():

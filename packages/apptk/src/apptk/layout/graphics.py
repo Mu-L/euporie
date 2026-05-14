@@ -813,6 +813,40 @@ class KittyUnicodeGraphicControl(BaseKittyGraphicControl):
         return self._format_cache.get(key, render_lines)
 
 
+def graphics_available(format_: str) -> bool:
+    """Check if graphical rendering is available for a given format.
+
+    Determines whether the current terminal and renderer support rendering
+    data of the given format as a graphic (e.g. via sixel, kitty, or iterm
+    protocols).
+
+    Args:
+        format_: The format of the data to check.
+
+    Returns:
+        True if graphics can be rendered, False otherwise.
+    """
+    from apptk.filters.environment import in_mplex
+
+    try:
+        app = get_app()
+    except Exception:
+        return False
+
+    renderer = app.renderer
+    return (
+        select_graphic_control(
+            format_=format_,
+            preferred=renderer.preferred_graphics(),
+            graphics_sixel=renderer.graphics_sixel,
+            graphics_kitty=renderer.graphics_kitty,
+            graphics_iterm=renderer.graphics_iterm,
+            in_mplex=in_mplex(),
+        )
+        is not None
+    )
+
+
 @lru_cache(maxsize=128)
 def select_graphic_control(
     format_: str,

@@ -4504,6 +4504,8 @@ class RichHTML:
         align_content: bool = True,
     ) -> StyleAndTextTuples:
         """Render LaTeX math content."""
+        from apptk.layout.graphics import graphics_available
+
         theme = element.theme
 
         # Render text representation
@@ -4527,14 +4529,16 @@ class RichHTML:
         )
         self.graphic_data.add(datum)
 
-        # Calculate size and pad text representation
-        cols, aspect = await datum.cell_size_async()
-        rows = max(len(list(split_lines(ft))), ceil(cols * aspect))
-        cols = max(cols, max_line_width(ft))
+        # Only add graphic overlay marker if graphics are available
+        if graphics_available(datum.format):
+            # Calculate size and pad text representation
+            cols, aspect = await datum.cell_size_async()
+            rows = max(len(list(split_lines(ft))), ceil(cols * aspect))
+            cols = max(cols, max_line_width(ft))
 
-        key = datum.add_size(Size(rows, cols), FitMode.SHRINK, FitMode.NONE)
-        ft = [(f"[Graphic_{key}]", ""), *ft]
-        ft = valign(ft, height=rows, how=VerticalAlign.TOP)
+            key = datum.add_size(Size(rows, cols), FitMode.SHRINK, FitMode.NONE)
+            ft = [(f"[Graphic_{key}]", ""), *ft]
+            ft = valign(ft, height=rows, how=VerticalAlign.TOP)
         return ft
 
     @overload
@@ -4561,6 +4565,8 @@ class RichHTML:
         self, data, format_, theme, path=None, raise_on_error=False
     ):
         """Render an image and prepare graphic representation."""
+        from apptk.layout.graphics import graphics_available
+
         datum = Datum(
             data,
             format_,
@@ -4595,17 +4601,18 @@ class RichHTML:
             rows = min(theme.content_height, len(list(split_lines(ft))))
             aspect = rows / cols
 
-        # Store reference to image element with appropriate fit modes
-        # Images should shrink to fit width but not grow, and maintain aspect ratio
-        key = datum.add_size(Size(rows, cols), FitMode.SHRINK, FitMode.NONE)
+        # Set default background color on generated content
+        ft = [(f"{theme.style} {style}", (text), *rest) for style, text, *rest in ft]
 
-        return cast(
-            "StyleAndTextTuples",
-            # Flag graphic position
-            [(f"[Graphic_{key}]", "")]
-            # Set default background color on generated content
-            + [(f"{theme.style} {style}", (text), *rest) for style, text, *rest in ft],
-        )
+        # Only add graphic overlay marker if graphics are available
+        if graphics_available(datum.format):
+            # Store reference to image element with appropriate fit modes
+            # Images should shrink to fit width but not grow, and maintain aspect ratio
+            key = datum.add_size(Size(rows, cols), FitMode.SHRINK, FitMode.NONE)
+
+            ft = [(f"[Graphic_{key}]", ""), *ft]
+
+        return cast("StyleAndTextTuples", ft)
 
     async def render_img_content(
         self,
