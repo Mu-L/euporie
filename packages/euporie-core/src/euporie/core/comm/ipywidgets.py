@@ -1275,7 +1275,7 @@ class HTMLModel(IpyWidgetComm):
 
         html = Display(
             Datum(data=self.data["state"].get("value", ""), format="html"),
-            dont_extend_width=True,
+            expand_width=False,
         )
         return CommView(
             Box(
