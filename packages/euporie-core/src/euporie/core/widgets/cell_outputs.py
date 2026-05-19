@@ -19,6 +19,7 @@ from apptk.layout.containers import (
     to_container,
 )
 from apptk.layout.display import Display
+from apptk.layout.processors import StripTrailingWhiteSpaceProcessor
 
 from euporie.core.widgets.layout import Box
 from euporie.core.widgets.tree import JsonView
@@ -171,6 +172,9 @@ class CellOutputDataElement(CellOutputElement):
             convert_kwargs=convert_kwargs,
             selectable=True,
             auto_copy_selection=True,
+            processors=[
+                StripTrailingWhiteSpaceProcessor(only_unstyled=True),
+            ],
         )
 
         # Ensure container gets invalidated if `wrap_cell_output` changes
