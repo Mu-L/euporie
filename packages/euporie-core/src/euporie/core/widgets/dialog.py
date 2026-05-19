@@ -700,7 +700,7 @@ class ErrorDialog(Dialog):
 
             data = metadata("euporie")
             if issue_url := dict(
-                x.split(", ", 1) for x in data.json["project_url"]
+                x.split(", ", 1) for x in data.json.get("project_url", [])
             ).get("Issues"):
                 parsed_url = urlparse(issue_url)
                 url = urlunparse(

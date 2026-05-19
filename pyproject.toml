@@ -25,6 +25,12 @@ classifiers = [
 ]
 dependencies = ["euporie-notebook", "euporie-preview", "euporie-console"]
 
+[project.urls]
+Documentation = "https://euporie.readthedocs.io/en/latest"
+Issues = "https://github.com/joouha/euporie/issues"
+Source = "https://github.com/joouha/euporie"
+Changelog = "https://euporie.readthedocs.io/en/latest/pages/changelog.html"
+
 [dependency-groups]
 dev = [
     "codespell>=2.4.1",
