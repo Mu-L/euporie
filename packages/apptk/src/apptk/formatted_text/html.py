@@ -739,13 +739,21 @@ def get_color(value: str) -> str:
     elif value.startswith("rgb"):
         # Ignore alpha for now - TODO
         color_values = value.strip("rgba()").split(",")[:3]
+        if len(color_values) != 3:
+            return ""
         hexes = []
         for color_value in color_values:
             if (int_value := get_integer(color_value)) is not None:
-                hexes.append(f"{hex(int_value)[2:]:02}")
+                # Clamp to valid 0-255 range
+                int_value = max(0, min(255, int_value))
+                hexes.append(f"{int_value:02x}")
             else:
                 return ""
-        return "#" + "".join(hexes)
+        result = "#" + "".join(hexes)
+        # Validate: must be exactly 7 chars (#rrggbb)
+        if len(result) != 7:
+            return ""
+        return result
     else:
         from apptk.styles.base import KNOWN_COLORS
 
