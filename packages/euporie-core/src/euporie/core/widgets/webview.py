@@ -468,8 +468,6 @@ class WebViewControl(UIControl):
     @add_cmd(filter=webview_has_focus, keys=["A-left"])
     def _webview_nav_prev() -> None:
         """Navigate backwards in the browser history."""
-        from euporie.web.widgets.webview import WebViewControl
-
         current_control = get_app().layout.current_control
         if isinstance(current_control, WebViewControl):
             current_control.nav_prev()
@@ -478,8 +476,6 @@ class WebViewControl(UIControl):
     @add_cmd(filter=webview_has_focus, keys=["A-right"])
     def _webview_nav_next() -> None:
         """Navigate forwards in the browser history."""
-        from euporie.web.widgets.webview import WebViewControl
-
         current_control = get_app().layout.current_control
         if isinstance(current_control, WebViewControl):
             current_control.nav_next()
@@ -530,8 +526,6 @@ class WebViewControl(UIControl):
     @add_cmd(filter=webview_has_focus, keys=["home"])
     def _webview_go_to_start() -> None:
         """Scroll the display to the top."""
-        from euporie.web.widgets.webview import WebViewControl
-
         current_control = get_app().layout.current_control
         if isinstance(current_control, WebViewControl):
             current_control.cursor_position = Point(0, 0)
@@ -540,8 +534,6 @@ class WebViewControl(UIControl):
     @add_cmd(filter=webview_has_focus, keys=["end"])
     def _webview_go_to_end() -> None:
         """Scroll the display down one page."""
-        from euporie.web.widgets.webview import WebViewControl
-
         layout = get_app().layout
         current_control = layout.current_control
         window = layout.current_window
@@ -561,8 +553,6 @@ if __name__ == "__main__":
     from apptk.key_binding.key_bindings import KeyBindings
     from apptk.layout.layout import Layout
     from apptk.output.color_depth import ColorDepth
-
-    from euporie.web.widgets.webview import WebViewControl
 
     kb = KeyBindings()
     kb.add("q")(lambda event: event.app.exit())
