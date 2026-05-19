@@ -6,6 +6,7 @@ import re
 from typing import TYPE_CHECKING, cast
 
 from apptk.border import GridStyle, ThinGrid
+from apptk.color import style_fg_bg
 from apptk.data_structures import DiBool, DiInt, DiStr
 from apptk.enums import HorizontalAlign, VerticalAlign
 from apptk.utils import get_cwidth
@@ -117,7 +118,7 @@ def strip(
         left: If :py:const:`True`, strip from the left side of the input
         right: If :py:const:`True`, strip from the right side of the input
         chars: The character to strip. If :py:const:`None`, strips whitespace
-        only_unstyled: If :py:const:`True`, only strip unstyled fragments
+        only_unstyled: If :py:const:`True`, only strip fragments with unstyled background
 
     Returns:
         The stripped formatted text
@@ -126,14 +127,29 @@ def strip(
     result = ft[:]
     for toggle, index, strip_func in [(left, 0, str.lstrip), (right, -1, str.rstrip)]:
         if result and toggle:
-            text = strip_func(result[index][1], chars)
-            while result and not text:
-                del result[index]
+            while True:
                 if not result:
                     break
-                text = strip_func(result[index][1], chars)
-            if result and "[ZeroWidthEscape]" not in result[index][0]:
-                result[index] = (result[index][0], text)
+
+                style, text, *rest = result[index]
+                text = strip_func(text, chars)
+                bg = style_fg_bg(style)[1] if only_unstyled else ""
+
+                if (
+                    result
+                    and not text
+                    and (not only_unstyled or (only_unstyled and bg == "default"))
+                ):
+                    del result[index]
+                    continue
+                break
+
+            if (
+                result
+                and "[ZeroWidthEscape]" not in style
+                and (not only_unstyled or (only_unstyled and bg == "default"))
+            ):
+                result[index] = (style, text, *rest)
     return result
 
 
