@@ -61,7 +61,9 @@ class Tab(metaclass=ABCMeta):
             path = UPath(f"untitled:/untitled-{self._untitled_count}{ext}")
         self.path = parse_path(path)
         self.container = Window(
-            FormattedTextControl([("fg:#888888", "\nLoading…")], focusable=True),
+            FormattedTextControl(
+                [("fg:#888888", "\nLoading…")], show_cursor=False, focusable=True
+            ),
             align=WindowAlign.CENTER,
         )
 
