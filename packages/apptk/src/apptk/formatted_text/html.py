@@ -5145,8 +5145,16 @@ class RichHTML:
 
                 ft = join_lines(lines)
 
-        # Fill space around block elements so they fill the content width
-        if (fill and d_blocky and not theme.d_table) or d_inline_block:
+        # Fill space around block elements so they fill the content width.
+        # For block elements: only pad if there is actual content (`ft`) OR the
+        # element has an explicit height set (e.g. absolutely positioned elements
+        # whose dimensions are derived from top/bottom offsets). Without the `ft`
+        # guard, empty void elements like <hr> (which render purely via borders/
+        # margins) would get padded to content_width, producing unwanted extra space.
+        # Inline-block elements are always padded to establish their box.
+        if (
+            fill and d_blocky and not theme.d_table and (ft or theme.height is not None)
+        ) or d_inline_block:
             pad_width = None
             if d_blocky:
                 pad_width = content_width
