@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from apptk.formatted_text.utils import strip
 from apptk.layout.processors import (
     AppendAutoSuggestion,
     Processor,
@@ -65,6 +66,36 @@ class ShowTrailingWhiteSpaceProcessor(Processor):
                 else:
                     break
         return Transformation(fragments)
+
+
+class StripTrailingWhiteSpaceProcessor(Processor):
+    """Strip trailing whitespace from line fragments.
+
+    Args:
+        only_unstyled: If :py:const:`True`, only strip whitespace from fragments
+            that have no style applied.
+    """
+
+    def __init__(self, chars: str | None = None, only_unstyled: bool = True) -> None:
+        """Create a new processor instance."""
+        self.chars = chars
+        self.only_unstyled = only_unstyled
+
+    def apply_transformation(self, ti: TransformationInput) -> Transformation:
+        """Remove trailing whitespace from the line fragments."""
+        fragments = ti.fragments
+
+        if not fragments:
+            return Transformation(fragments)
+
+        result = strip(
+            fragments,
+            left=False,
+            right=True,
+            chars=self.chars,
+            only_unstyled=self.only_unstyled,
+        )
+        return Transformation(result)
 
 
 class CursorProcessor(Processor):
