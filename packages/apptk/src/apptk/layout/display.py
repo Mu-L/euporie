@@ -16,7 +16,7 @@ from apptk.data_structures import Point, Size
 from apptk.enums import FitMode
 from apptk.filters.app import display_has_focus, scrollable
 from apptk.filters.utils import to_filter
-from apptk.formatted_text.utils import fragment_list_width, split_lines, strip, wrap
+from apptk.formatted_text.utils import fragment_list_width, split_lines, wrap
 from apptk.key_binding.key_bindings import KeyBindings
 from apptk.layout.containers import (
     ConditionalContainer,
@@ -28,6 +28,7 @@ from apptk.layout.containers import (
 from apptk.layout.controls import GetLinePrefixCallable, UIContent, UIControl
 from apptk.layout.dimension import Dimension, to_dimension
 from apptk.layout.margins import ScrollbarMargin
+from apptk.layout.processors import Processor, TransformationInput, merge_processors
 from apptk.layout.utils import explode_text_fragments
 from apptk.mouse_events import MouseEvent, MouseEventType
 from apptk.selection import SelectionType
@@ -103,6 +104,7 @@ class DisplayControl(UIControl):
         convert_kwargs: dict[str, Any] | None = None,
         selectable: FilterOrBool = False,
         auto_copy_selection: FilterOrBool = False,
+        processors: list[Processor] | None = None,
     ) -> None:
         """Create a new web-view control instance.
 
@@ -121,6 +123,7 @@ class DisplayControl(UIControl):
             convert_kwargs: Additional arguments for datum conversion.
             selectable: Whether text can be selected with the mouse.
             auto_copy_selection: Whether to automatically copy selections to clipboard.
+            processors: List of processors to apply to rendered lines.
         """
         self._datum = datum
         self.style = style
@@ -133,6 +136,8 @@ class DisplayControl(UIControl):
         self.expand_height = to_filter(expand_height)
         self.threaded = threaded
         self.convert_kwargs = convert_kwargs or {}
+
+        self.processors = processors
 
         self.selectable = to_filter(selectable)
         self.auto_copy_selection = to_filter(auto_copy_selection)
@@ -260,11 +265,7 @@ class DisplayControl(UIControl):
             wrap_lines=wrap_lines,
             **self.convert_kwargs,
         )
-        # lines = list(split_lines(ft))
-        lines = [
-            strip(line, left=False, right=True, only_unstyled=True)
-            for line in split_lines(ft)
-        ]
+        lines = list(split_lines(ft))
         if width and height and graphics_available(self.datum.format):
             # Use the maximum of the requested render size and the actual text
             # dimensions so the graphic overlay fully covers the ASCII fallback
@@ -339,6 +340,62 @@ class DisplayControl(UIControl):
                 get_app().create_background_task(asyncio.to_thread(_render))
             else:
                 _render()
+
+    def _apply_processors(
+        self, lines: list[StyleAndTextTuples], width: int, height: int
+    ) -> list[StyleAndTextTuples]:
+        """Apply input processors to the rendered lines.
+
+        Args:
+            lines: The original rendered lines.
+            width: Available width.
+            height: Available height.
+
+        Returns:
+            The processed lines.
+        """
+        processors = self.processors or []
+
+        if not processors:
+            return lines
+
+        merged_processor = merge_processors(processors)
+
+        # Build a synthetic Document from the lines' text
+        from apptk.document import Document
+        from apptk.formatted_text.utils import fragment_list_to_text
+
+        line_texts = [fragment_list_to_text(line) for line in lines]
+        text = "\n".join(line_texts)
+        document = Document(text, cursor_position=0)
+
+        def get_line(i: int) -> StyleAndTextTuples:
+            try:
+                return lines[i]
+            except IndexError:
+                return []
+
+        processed_lines: list[StyleAndTextTuples] = []
+        for lineno, fragments in enumerate(lines):
+
+            def source_to_display(i: int) -> int:
+                return i
+
+            transformation = merged_processor.apply_transformation(
+                TransformationInput(
+                    buffer_control=self,  # type: ignore[arg-type]
+                    document=document,
+                    lineno=lineno,
+                    source_to_display=source_to_display,
+                    fragments=fragments,
+                    width=width,
+                    height=height,
+                    get_line=get_line,
+                )
+            )
+            processed_lines.append(transformation.fragments)
+
+        return processed_lines
 
     def reset(self) -> None:
         """Reset the state of the control."""
@@ -418,6 +475,7 @@ class DisplayControl(UIControl):
             ]
         else:
             lines = self.lines
+            lines = self._apply_processors(lines, width, height)
 
         def get_line(i: int) -> StyleAndTextTuples:
             try:
@@ -667,6 +725,7 @@ class Display(Container):
         convert_kwargs: dict[str, Any] | None = None,
         selectable: FilterOrBool = False,
         auto_copy_selection: FilterOrBool = False,
+        processors: list[Processor] | None = None,
     ) -> None:
         """Instantiate an Output container object.
 
@@ -689,6 +748,7 @@ class Display(Container):
             convert_kwargs: Key-word arguments to pass to :py:method:`Datum.convert`
             selectable: Whether text can be selected with the mouse
             auto_copy_selection: Whether to automatically copy selections to clipboard
+            processors: List of processors to apply to rendered lines
 
         """
         self._style = style
@@ -713,6 +773,7 @@ class Display(Container):
             convert_kwargs=convert_kwargs,
             selectable=selectable,
             auto_copy_selection=auto_copy_selection,
+            processors=processors,
         )
 
         # Calculate dont_extend based on expand settings
