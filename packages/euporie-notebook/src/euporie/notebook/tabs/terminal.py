@@ -6,13 +6,14 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
-from ptterm import Terminal
 from upath import UPath
 
 from euporie.core.tabs.base import Tab
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from ptterm import Terminal
 
     from euporie.core.app.app import BaseApp
     from euporie.core.bars.status import StatusBarFields
@@ -27,12 +28,14 @@ class TerminalTab(Tab):
 
     def __init__(self, app: BaseApp, path: Path | None = None) -> None:
         """Call when the tab is created."""
+        from ptterm import Terminal
+
         self._untitled_count += 1
         path = UPath(f"untitled:/terminal-{self._untitled_count}")
 
         super().__init__(app, path)
 
-        self.terminal = Terminal(
+        self.terminal: Terminal = Terminal(
             command=[os.getenv("SHELL") or "/bin/sh"],
             done_callback=lambda: self.app.close_tab(self),
         )
