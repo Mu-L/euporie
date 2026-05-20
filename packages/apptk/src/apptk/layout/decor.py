@@ -309,13 +309,19 @@ class FocusedStyle(Container):
 
 
 class DropShadow(Container):
-    """A transparent container which makes the background darker."""
+    """A transparent container which shifts colors toward a target."""
 
     _SHADOW_STYLE_CACHE = SimpleCache(maxsize=255)
 
-    def __init__(self, amount: float = 0.5) -> None:
-        """Create a new instance."""
+    def __init__(self, amount: float = 0.5, target: str | Color = "#000000") -> None:
+        """Create a new instance.
+
+        Args:
+            amount: How far to shift colors toward the target color.
+            target: The color to shift toward.
+        """
         self.amount = amount
+        self.target = Color(target)
 
     @property
     def cp(self) -> ColorPalette:
@@ -358,7 +364,7 @@ class DropShadow(Container):
                     fg = Color.from_rgb(*ANSI_COLORS_TO_RGB[color], name=color)
                 else:
                     fg = Color(color)
-                style += f" fg:{fg.darker(amount)}"
+                style += f" fg:{fg.towards(target, amount)}"
 
                 bgcolor = attrs.bgcolor
                 if not bgcolor or bgcolor == "default":
@@ -367,13 +373,14 @@ class DropShadow(Container):
                     bg = Color.from_rgb(*ANSI_COLORS_TO_RGB[bgcolor], name=bgcolor)
                 else:
                     bg = Color(bgcolor)
-                style += f" bg:{bg.darker(amount)}"
+                style += f" bg:{bg.towards(target, amount)}"
 
                 return style
 
             ypos = write_position.ypos
             xpos = write_position.xpos
             amount = self.amount
+            target = self.target
             for y in range(ypos, ypos + write_position.height):
                 row = screen.data_buffer[y]
                 for x in range(xpos, xpos + write_position.width):
@@ -384,6 +391,7 @@ class DropShadow(Container):
                         app.style,
                         app.style_transformation.invalidation_hash(),
                         amount,
+                        target,
                         style,
                     )
                     new_style = self._SHADOW_STYLE_CACHE.get(
