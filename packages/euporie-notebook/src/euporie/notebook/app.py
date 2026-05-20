@@ -26,6 +26,7 @@ from apptk.layout.containers import (
 from apptk.layout.controls import FormattedTextControl
 from apptk.layout.dimension import Dimension
 from apptk.widgets.menus import MenuContainer, MenuItem
+from apptk.widgets.tab_bar import TabBarControl, TabBarTab
 from apptk.widgets.toolbars import (
     CommandBar,
     HorizontalCompletionsMenu,
@@ -50,7 +51,6 @@ from euporie.core.widgets.dialog import (
     UnsavedDialog,
 )
 from euporie.core.widgets.file_browser import FileBrowser
-from euporie.core.widgets.layout import TabBarControl, TabBarTab
 from euporie.core.widgets.logo import logo_micro
 from euporie.core.widgets.minimap import MiniMap
 from euporie.core.widgets.pager import Pager
