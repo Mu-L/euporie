@@ -313,20 +313,30 @@ class DropShadow(Container):
 
     _SHADOW_STYLE_CACHE = SimpleCache(maxsize=255)
 
-    def __init__(self, amount: float = 0.5, target: str | Color = "#000000") -> None:
+    def __init__(self, amount: float = 0.5, color: str | Color = "#000000") -> None:
         """Create a new instance.
 
         Args:
-            amount: How far to shift colors toward the target color.
-            target: The color to shift toward.
+            amount: How far to shift colors toward the color color.
+            color: The color to shift toward.
         """
         self.amount = amount
-        self.target = Color(target)
+        self.color = color
 
     @property
     def cp(self) -> ColorPalette:
         """Get the current app's current color palette."""
         return get_app().color_palette
+
+    @property
+    def color(self) -> Color:
+        """Shadow color."""
+        return self._color
+
+    @color.setter
+    def color(self, value: str | Color) -> None:
+        """Set color color."""
+        self._color = Color(value)
 
     def reset(self) -> None:
         """Reset the wrapped container - here, do nothing."""
@@ -357,13 +367,13 @@ class DropShadow(Container):
                 """Calculate a transformed style."""
                 attrs = attr_cache[style]
 
-                color = attrs.color
-                if not color or color == "default":
+                fgcolor = attrs.color
+                if not fgcolor or fgcolor == "default":
                     fg = Color.from_rgb(*TERMINAL_COLORS_TO_RGB["fg"])
-                elif color in ANSI_COLORS_TO_RGB:
-                    fg = Color.from_rgb(*ANSI_COLORS_TO_RGB[color], name=color)
+                elif fgcolor in ANSI_COLORS_TO_RGB:
+                    fg = Color.from_rgb(*ANSI_COLORS_TO_RGB[fgcolor], name=fgcolor)
                 else:
-                    fg = Color(color)
+                    fg = Color(fgcolor)
                 style += f" fg:{fg.towards(target, amount)}"
 
                 bgcolor = attrs.bgcolor
@@ -380,7 +390,7 @@ class DropShadow(Container):
             ypos = write_position.ypos
             xpos = write_position.xpos
             amount = self.amount
-            target = self.target
+            target = self.color
             for y in range(ypos, ypos + write_position.height):
                 row = screen.data_buffer[y]
                 for x in range(xpos, xpos + write_position.width):
