@@ -19,14 +19,14 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
     from typing import Any, Literal, Protocol, TypeVar, Unpack
 
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
 
     class KernelFactory(Protocol):
         """Type for kernel factory functions."""
 
         def __call__(
             self,
-            kernel_tab: KernelTab,
+            kernel_tab: KernelPane,
             default_callbacks: MsgCallbacks | None = None,
             allow_stdin: bool = False,
             **kwargs: Any,
@@ -79,7 +79,7 @@ class BaseKernel(ABC):
 
     def __init__(
         self,
-        kernel_tab: KernelTab,
+        kernel_tab: KernelPane,
         default_callbacks: MsgCallbacks | None = None,
         allow_stdin: bool = False,
         **kwargs: Any,

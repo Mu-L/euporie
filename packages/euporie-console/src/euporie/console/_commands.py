@@ -21,7 +21,7 @@ async def _convert_to_notebook() -> None:
     from apptk.application.run_in_terminal import in_terminal
 
     from euporie.console.app import get_app
-    from euporie.console.tabs.console import Console
+    from euporie.console.panes.console import Console
     from euporie.notebook.app import NotebookApp
 
     app = get_app()
@@ -31,9 +31,9 @@ async def _convert_to_notebook() -> None:
     nb_app = NotebookApp()
     # Use same event loop
     nb_app.loop = app.loop
-    for tab in app.tabs:
+    for tab in app.panes:
         if isinstance(tab, Console):
-            from euporie.notebook.tabs.notebook import Notebook
+            from euporie.notebook.panes.notebook import Notebook
 
             nb = Notebook(
                 app=nb_app,
@@ -47,7 +47,7 @@ async def _convert_to_notebook() -> None:
             # Add the current input
             nb.add(len(nb.json["cells"]) + 1, source=tab.input_box.buffer.text)
             # Add the new notebook to the notebook app
-            nb_app.tabs.append(nb)
+            nb_app.panes.append(nb)
             # Tell notebook that the kernel has already started
             nb.kernel_started()
 
@@ -86,9 +86,9 @@ def _clear_input() -> None:
 def _run_input() -> None:
     """Run the console input."""
     from euporie.console.app import get_app
-    from euporie.console.tabs.console import Console
+    from euporie.console.panes.console import Console
 
-    if isinstance(console := get_app().tab, Console):
+    if isinstance(console := get_app().pane, Console):
         console.run()
 
 
@@ -107,11 +107,11 @@ def _end_of_file(event: KeyPressEvent) -> None:
 def _clear_screen() -> None:
     """Clear the screen and the previous output."""
     from euporie.console.app import get_app
-    from euporie.console.tabs.console import Console
+    from euporie.console.panes.console import Console
 
     app = get_app()
     app.renderer.clear()
 
-    if isinstance(console := app.tab, Console):
+    if isinstance(console := app.pane, Console):
         console.reset()
         app.layout.focus(console.input_box)

@@ -16,7 +16,7 @@ from upath import UPath
 from euporie.core import __version__
 from euporie.core.app.current import available_apps
 from euporie.core.config._setting import Setting
-from euporie.core.filters import tab_type_has_focus
+from euporie.core.filters import pane_type_has_focus
 
 # App
 
@@ -829,9 +829,9 @@ wrap_cell_outputs = Setting(
     """,
     filter=(
         ~buffer_has_focus
-        & tab_type_has_focus("euporie.notebook.tabs.notebook:Notebook")
+        & pane_type_has_focus("euporie.notebook.panes.notebook:Notebook")
     )
-    | ~tab_type_has_focus("euporie.notebook.tabs.notebook:Notebook"),
+    | ~pane_type_has_focus("euporie.notebook.panes.notebook:Notebook"),
     keys=["W"],
 )
 

@@ -30,8 +30,8 @@ from euporie.core.filters import (
     multiple_cells_selected,
 )
 from euporie.core.nbformat import NOTEBOOK_EXTENSIONS, new_code_cell
+from euporie.core.panes.notebook import BaseNotebook
 from euporie.core.style import KERNEL_STATUS_REPR
-from euporie.core.tabs.notebook import BaseNotebook
 from euporie.core.widgets.cell import Cell
 
 if TYPE_CHECKING:
@@ -92,7 +92,7 @@ class Notebook(BaseNotebook):
         self.undo_buffer: deque[tuple[int, list[Cell]]] = deque(maxlen=10)
         self.default_callbacks["set_next_input"] = self.set_next_input
 
-    # Tab stuff
+    # Pane stuff
 
     def _statusbar_kernel_handler(self, event: MouseEvent) -> NotImplementedOrNone:
         """Event handler for kernel name field in statusbar."""

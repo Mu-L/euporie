@@ -253,7 +253,7 @@ class QueueHandler(logging.Handler):
             del cls.hooks[hook_id]
 
 
-class LogTabFormatter(FtFormatter):
+class LogPaneFormatter(FtFormatter):
     """Format log messages for display in the log view tab."""
 
     def ft_format(
@@ -412,7 +412,7 @@ def setup_logs(config: Config | None = None) -> None:
                 "()": StdoutFormatter,
             },
             "log_tab_format": {
-                "()": LogTabFormatter,
+                "()": LogPaneFormatter,
             },
         },
         "handlers": {

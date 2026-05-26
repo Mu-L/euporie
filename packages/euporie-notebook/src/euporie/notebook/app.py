@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import logging
 import os
-from functools import partial
 from typing import TYPE_CHECKING, ClassVar, cast
-from weakref import WeakKeyDictionary
 
 from apptk.border import OuterHalfGrid
-from apptk.filters import Condition
 from apptk.filters.app import has_toolbar
 from apptk.formatted_text.base import to_formatted_text
 from apptk.formatted_text.utils import truncate
@@ -22,11 +19,13 @@ from apptk.layout.containers import (
     VSplit,
     Window,
     WindowAlign,
+    to_container,
 )
 from apptk.layout.controls import FormattedTextControl
 from apptk.layout.dimension import Dimension
+from apptk.widgets.docking import DockingGroup, DockingSplit
 from apptk.widgets.menus import MenuContainer, MenuItem
-from apptk.widgets.tab_bar import TabBarControl, TabBarTab
+from apptk.widgets.panel import Panel
 from apptk.widgets.toolbars import (
     CommandBar,
     HorizontalCompletionsMenu,
@@ -36,7 +35,7 @@ from apptk.widgets.toolbars import (
 
 from euporie.core import settings as core_settings
 from euporie.core.app.app import BaseApp
-from euporie.core.filters import has_tabs
+from euporie.core.filters import has_panes
 from euporie.core.history import StateHistory
 from euporie.core.widgets.dialog import (
     AboutDialog,
@@ -58,7 +57,6 @@ from euporie.core.widgets.palette import CommandPalette
 from euporie.core.widgets.toc import TableOfContents
 from euporie.core.widgets.variables import VariableList
 from euporie.notebook import settings as notebook_settings
-from euporie.notebook.enums import TabMode
 from euporie.notebook.widgets.side_bar import SideBar
 
 if TYPE_CHECKING:
@@ -70,12 +68,13 @@ if TYPE_CHECKING:
     from apptk.formatted_text import StyleAndTextTuples
     from apptk.layout.containers import AnyContainer
 
+    from euporie.core.app.app import BaseApp as _BaseApp
     from euporie.core.config._setting import Setting
-    from euporie.core.tabs import TabRegistryEntry
-    from euporie.core.tabs.base import Tab
+    from euporie.core.panes import PaneRegistryEntry
+    from euporie.core.panes.base import Pane
     from euporie.core.widgets.cell import Cell
-    from euporie.notebook.tabs.new import NewTab
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.new import NewPane
+    from euporie.notebook.panes.notebook import Notebook
 
 log = logging.getLogger(__name__)
 
@@ -89,8 +88,7 @@ class NotebookApp(BaseApp):
     notebooks in the terminal.
     """
 
-    _tab_container: AnyContainer
-    new_tab: NewTab
+    new_pane: NewPane
 
     name = "notebook"
 
@@ -126,7 +124,6 @@ class NotebookApp(BaseApp):
         core_settings.show_remote_outputs,
         core_settings.save_widget_state,
         # Notebook-specific
-        notebook_settings.tab_mode,
         notebook_settings.always_show_tab_bar,
         notebook_settings.background_pattern,
         notebook_settings.background_character,
@@ -151,14 +148,13 @@ class NotebookApp(BaseApp):
         kwargs.setdefault("leave_graphics", False)
         super().__init__(**kwargs)
 
-        self._tab_bar_tabs: dict[int, WeakKeyDictionary[Tab, TabBarTab]] = {}
-        self.on_tabs_change += self.set_tab_container
+        self.docking_split: DockingSplit | None = None
+        self.on_tabs_change += self._on_tabs_change
 
         # Register config hooks
         self.config.events.show_cell_borders += lambda x: self.refresh()
-        self.config.events.tab_mode += self.set_tab_container
-        self.config.events.background_pattern += self.set_tab_container
-        self.config.events.background_character += self.set_tab_container
+        self.config.events.background_pattern += lambda x: self.invalidate()
+        self.config.events.background_character += lambda x: self.invalidate()
 
     def pre_run(self, app: Application | None = None) -> None:
         """Continue loading the app."""
@@ -178,17 +174,17 @@ class NotebookApp(BaseApp):
         )
 
     @property
-    def tab_registry(self) -> list[TabRegistryEntry]:
-        """Return the tab registry."""
-        from euporie.notebook.tabs import _TAB_REGISTRY
+    def tab_registry(self) -> list[PaneRegistryEntry]:
+        """Return the pane registry."""
+        from euporie.notebook.panes import _PANE_REGISTRY
 
-        return _TAB_REGISTRY
+        return _PANE_REGISTRY
 
     def format_title(self) -> StyleAndTextTuples:
-        """Format the tab's title for display in the top right of the app."""
-        if self.tabs:
+        """Format the pane's title for display in the top right of the app."""
+        if self.panes:
             # Get tab without re-focusing it
-            tab = self.tabs[self._tab_idx]
+            tab = self.panes[self._tab_idx]
             title = truncate(to_formatted_text(tab.title, style="bold"), 30)
             return [("", " "), *title, ("", " ")]
         else:
@@ -200,74 +196,138 @@ class NotebookApp(BaseApp):
         Returns:
             A layout container displaying the opened tab containers.
         """
-        try:
-            return self._tab_container
-        except AttributeError:
-            self.set_tab_container()
-            return self._tab_container
-
-    def set_tab_container(self, app: BaseApp | None = None) -> None:
-        """Set the container to use to display opened tabs."""
-        tab_mode = TabMode(self.config.tab_mode)
-        if not self.tabs:
+        if not self.panes:
             try:
-                new_tab = self.new_tab
+                return self.new_pane
             except AttributeError:
-                from euporie.notebook.tabs.new import NewTab
+                from euporie.notebook.panes.new import NewPane
 
-                new_tab = self.new_tab = NewTab(self)
-            self._tab_container = new_tab
-            self.layout.focus(new_tab)
-        elif tab_mode == TabMode.TILE_HORIZONTALLY:
-            children = []
-            for tab in self.tabs:
+                self.new_pane = NewPane(self)
+                return self.new_pane
 
-                def _get_tab_container(tab: Tab = tab) -> Tab:
-                    return tab
-
-                children.append(DynamicContainer(_get_tab_container))
-            self._tab_container = HSplit(
-                children=children,
-                padding=1,
-                padding_style="class:tab-padding",
-                padding_char="─",
+        if self.docking_split is None:
+            # Initialize the DockingSplit with current tabs
+            self.docking_split = DockingSplit(
+                panels=[self._create_docking_panel(tab) for tab in self.panes],
+                style="class:app",
+                zone_color=self.color_palette.bg,
+                zone_highlight=self.color_palette.hl,
+                hide_single_tab=~self.config.filters.always_show_tab_bar,
             )
-        elif tab_mode == TabMode.TILE_VERTICALLY:
-            children = []
-            for tab in self.tabs:
+            # Set active panel to match _tab_idx
+            if isinstance(self.docking_split.root, DockingGroup):
+                self.docking_split.root._active = min(
+                    self._tab_idx, max(0, len(self.panes) - 1)
+                )
+                self.docking_split.focused_group = self.docking_split.root
 
-                def _get_tab_container(tab: Tab = tab) -> Tab:
-                    return tab
+        # Sync the active group highlight on every render so it's never stale
+        if self.render_counter > 0 and self.panes:
+            for pane in self.panes:
+                if self.layout.has_focus(pane):
+                    self._sync_docking_active(pane)
+                    break
 
-                children.append(DynamicContainer(_get_tab_container))
-            self._tab_container = VSplit(
-                children=children,
-                padding=1,
-                padding_style="class:tab-padding",
-                padding_char="│",
-            )
-        else:
-            self._tab_container = HSplit(
-                [
-                    ConditionalContainer(
-                        Window(
-                            TabBarControl(
-                                tabs=self.tab_bar_tabs, active=lambda: self._tab_idx
-                            ),
-                            height=2,
-                            style="class:app-tab-bar",
-                            dont_extend_height=True,
-                        ),
-                        filter=Condition(
-                            lambda: (
-                                (len(self.tabs) > 1 or self.config.always_show_tab_bar)
-                                and TabMode(self.config.tab_mode) == TabMode.STACK
-                            )
-                        ),
-                    ),
-                    DynamicContainer(lambda: self.tabs[self._tab_idx]),
-                ]
-            )
+        return self.docking_split
+
+    def _create_docking_panel(self, pane: Pane) -> Panel:
+        """Create a Panel wrapping a Pane.
+
+        Args:
+            pane: The tab to wrap.
+
+        Returns:
+            A Panel for the pane.
+        """
+        return Panel(
+            title=lambda pane=pane: pane.title,  # type: ignore[misc]
+            content=pane,
+            closeable=True,
+            on_activate=lambda sender, pane=pane: self._on_panel_activate(pane),  # type: ignore[misc]
+            on_close=lambda sender, pane=pane: self.close_tab(pane),  # type: ignore[misc]
+        )
+
+    def _on_panel_activate(self, pane: Pane) -> None:
+        """Handle a panel being activated in the docking split.
+
+        Args:
+            pane: The tab that was activated.
+        """
+        if pane in self.panes:
+            self._tab_idx = self.panes.index(pane)
+            if self.docking_split is not None:
+                group = self.docking_split.get_group_for_content(pane)
+                if group is not None:
+                    self.docking_split.focused_group = group
+            try:
+                self.layout.focus(to_container(pane))
+            except ValueError:
+                pass
+
+    def _on_tabs_change(self, app: _BaseApp | None = None) -> None:
+        """Handle tabs list changes."""
+        if not self.panes:
+            self.docking_split = None
+        self.invalidate()
+
+    def _remove_tab_from_docking(self, pane: Pane) -> None:
+        """Remove a Pane's panel from the docking tree.
+
+        Args:
+            pane: The pane to remove.
+        """
+        if self.docking_split is None:
+            return
+
+        # Find the panel corresponding to this pane
+        panel_to_remove: Panel | None = None
+        for panel in self.docking_split.panels:
+            if panel.content is pane:
+                panel_to_remove = panel
+                break
+
+        if panel_to_remove is not None:
+            self.docking_split.remove_panel(panel_to_remove)
+
+    def _sync_docking_active(self, pane: Pane) -> None:
+        """Ensure the docking split shows the focused Pane as active.
+
+        Args:
+            pane: The pane that should be shown as active.
+        """
+        if self.docking_split is not None:
+            self.docking_split.focus_panel(pane)
+
+    def add_tab(self, pane: pane) -> None:
+        """Add a pane to the app and docking split.
+
+        Args:
+            pane: The pane to add.
+        """
+        super().add_tab(pane)
+        if self.docking_split is not None:
+            panel = self._create_docking_panel(pane)
+            self.docking_split.add_panel(panel)
+
+    def cleanup_closed_tab(self, pane: Pane) -> None:
+        """Remove a pane from the app and docking split.
+
+        Args:
+            pane: The closed pane to clean up.
+        """
+        # Remove from docking split
+        if self.docking_split is not None:
+            self._remove_tab_from_docking(pane)
+        # Call parent (removes from self.panes, fires on_tabs_change, focuses next)
+        super().cleanup_closed_tab(pane)
+        # If no panes remain, clear docking split so NewPane shows
+        if not self.panes:
+            self.docking_split = None
+
+    @property
+    def pane(self) -> Pane | None:
+        """Return the currently selected pane."""
+        return super().pane
 
     def load_container(self) -> FloatContainer:
         """Build the main application layout."""
@@ -279,7 +339,7 @@ class NotebookApp(BaseApp):
                 dont_extend_width=True,
                 align=WindowAlign.RIGHT,
             ),
-            filter=has_tabs,
+            filter=has_panes,
         )
 
         self.pager = Pager()
@@ -350,7 +410,7 @@ class NotebookApp(BaseApp):
                     (
                         "Variables",
                         lambda: "" if self.config.show_icons else [("bold", "V")],
-                        VariableList(lambda: getattr(self.tab, "kernel", None)),
+                        VariableList(lambda: getattr(self.pane, "kernel", None)),
                     ),
                 ]
             ),
@@ -403,21 +463,6 @@ class NotebookApp(BaseApp):
 
         return self.container
 
-    def tab_bar_tabs(self) -> list[TabBarTab]:
-        """Return a list of the current tabs for the tab-bar."""
-        result = []
-        for i, tab in enumerate(self.tabs):
-            index_dict = self._tab_bar_tabs.setdefault(i, WeakKeyDictionary())
-            if tab not in index_dict:
-                index_dict[tab] = TabBarTab(
-                    title=lambda tab=tab: tab.title,  # type: ignore [misc]
-                    on_activate=partial(setattr, self, "tab_idx", i),
-                    on_close=partial(self.close_tab, tab),
-                    closeable=True,
-                )
-            result.append(self._tab_bar_tabs[i][tab])
-        return result
-
     def _handle_exception(
         self, loop: AbstractEventLoop, context: dict[str, Any]
     ) -> None:
@@ -441,22 +486,22 @@ class NotebookApp(BaseApp):
 
         """
         really_close = super().exit
-        if self.tabs:
+        if self.panes:
 
             def final_cb() -> None:
                 """Really exit after the last tab in the chain is closed."""
-                self.cleanup_closed_tab(self.tabs[0])
+                self.cleanup_closed_tab(self.panes[0])
                 really_close(*args, **kwargs)
 
-            def create_cb(close_tab: Tab, cleanup_tab: Tab, cb: Callable) -> Callable:
-                """Generate a tab close chaining callbacks.
+            def create_cb(close_tab: Pane, cleanup_tab: Pane, cb: Callable) -> Callable:
+                """Generate a pane close chaining callbacks.
 
-                Cleans up after the previously closed tab, and requests to close the
+                Cleans up after the previously closed pane, and requests to close the
                 next tab in the chain.
 
                 Args:
-                    close_tab: The tab to close
-                    cleanup_tab: The previously closed tab to cleanup
+                    close_tab: The pane to close
+                    cleanup_tab: The previously closed pane to cleanup
                     cb: The callback to call when work is complete
 
                 Returns:
@@ -472,28 +517,28 @@ class NotebookApp(BaseApp):
                 return inner
 
             cb = final_cb
-            for close_tab, cleanup_tab in zip(self.tabs, self.tabs[1:]):
+            for close_tab, cleanup_tab in zip(self.panes, self.panes[1:]):
                 cb = create_cb(close_tab, cleanup_tab, cb)
-            self.tabs[-1].close(cb)
+            self.panes[-1].close(cb)
         else:
             really_close(*args, **kwargs)
 
     @property
     def notebook(self) -> Notebook | None:
         """Return the currently active notebook."""
-        from euporie.notebook.tabs.notebook import Notebook
+        from euporie.notebook.panes.notebook import Notebook
 
-        if isinstance(self.tab, Notebook):
-            return self.tab
+        if isinstance(self.pane, Notebook):
+            return self.pane
         return None
 
     @property
     def cell(self) -> Cell | None:
         """Return the currently active cell."""
-        from euporie.notebook.tabs.notebook import Notebook
+        from euporie.notebook.panes.notebook import Notebook
 
-        if isinstance(self.tab, Notebook):
-            return self.tab.cell
+        if isinstance(self.pane, Notebook):
+            return self.pane.cell
         return None
 
     def load_menu_items(self) -> list[MenuItem]:
@@ -564,14 +609,6 @@ class NotebookApp(BaseApp):
                 children=[
                     MenuItem.from_cmd("next-tab"),
                     MenuItem.from_cmd("previous-tab"),
-                    separator,
-                    MenuItem(
-                        "Tab mode",
-                        children=[
-                            MenuItem.from_cmd(f"set-tab-mode-{choice}")
-                            for choice in self.config.choices.tab_mode
-                        ],
-                    ),
                 ],
                 description="Tab management",
             ),

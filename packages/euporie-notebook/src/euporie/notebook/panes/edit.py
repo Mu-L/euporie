@@ -13,8 +13,8 @@ from apptk.layout.dimension import Dimension
 from apptk.lexers.utils import detect_lexer
 
 from euporie.core.kernel.base import BaseKernel, MsgCallbacks
+from euporie.core.panes.kernel import KernelPane
 from euporie.core.path import safe_write
-from euporie.core.tabs.kernel import KernelTab
 from euporie.core.widgets.inputs import KernelInput
 
 if TYPE_CHECKING:
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class EditorTab(KernelTab):
-    """Tab class for editing text files."""
+class EditorPane(KernelPane):
+    """Pane class for editing text files."""
 
     name = "Text Editor"
     weight = 1

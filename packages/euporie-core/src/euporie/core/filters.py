@@ -32,9 +32,9 @@ def config_filter(name: str) -> Condition:
 
 
 @Condition
-def has_tabs() -> bool:
-    """Filter to show if any tabs are open in an app."""
-    return bool(get_app().tabs)
+def has_panes() -> bool:
+    """Filter to show if any panes are open in an app."""
+    return bool(get_app().panes)
 
 
 @Condition
@@ -67,37 +67,37 @@ has_float = has_dialog | has_menus | has_completions
 
 
 @Condition
-def tab_has_focus() -> bool:
-    """Determine if there is a currently focused tab."""
-    return get_app().tab is not None
+def pane_has_focus() -> bool:
+    """Determine if there is a currently focused pane."""
+    return get_app().pane is not None
 
 
 @Condition
-def kernel_tab_has_focus() -> bool:
-    """Determine if there is a focused kernel tab."""
-    from euporie.core.tabs.kernel import KernelTab
+def kernel_pane_has_focus() -> bool:
+    """Determine if there is a focused kernel pane."""
+    from euporie.core.panes.kernel import KernelPane
 
-    return isinstance(get_app().tab, KernelTab)
+    return isinstance(get_app().pane, KernelPane)
 
 
 @cache
-def tab_type_has_focus(tab_class_path: str) -> Condition:
+def pane_type_has_focus(pane_class_path: str) -> Condition:
     """Determine if the focused tab is of a particular type."""
     from pkgutil import resolve_name
 
-    tab_class = cache(resolve_name)
+    pane_class = cache(resolve_name)
 
-    return Condition(lambda: isinstance(get_app().tab, tab_class(tab_class_path)))
+    return Condition(lambda: isinstance(get_app().pane, pane_class(pane_class_path)))
 
 
 @Condition
-def tab_can_save() -> bool:
-    """Determine if the current tab can save it's contents."""
-    from euporie.core.tabs.base import Tab
+def pane_can_save() -> bool:
+    """Determine if the current pane can save it's contents."""
+    from euporie.core.panes.base import Pane
 
     return (
-        tab := get_app().tab
-    ) is not None and tab.__class__.write_file != Tab.write_file
+        pane := get_app().pane
+    ) is not None and pane.__class__.write_file != Pane.write_file
 
 
 @Condition
@@ -112,21 +112,21 @@ def pager_has_focus() -> bool:
 
 @Condition
 def kernel_is_python() -> bool:
-    """Determine if the current tab has a python kernel."""
-    from euporie.core.tabs.kernel import KernelTab
+    """Determine if the current pane has a python kernel."""
+    from euporie.core.panes.kernel import KernelPane
 
-    kernel_tab = get_app().tab
-    if isinstance(kernel_tab, KernelTab):
-        return kernel_tab.language == "python"
+    kernel_pane = get_app().pane
+    if isinstance(kernel_pane, KernelPane):
+        return kernel_pane.language == "python"
     return False
 
 
 @Condition
 def multiple_cells_selected() -> bool:
     """Determine if there is more than one selected cell."""
-    from euporie.core.tabs.notebook import BaseNotebook
+    from euporie.core.panes.notebook import BaseNotebook
 
-    nb = get_app().tab
+    nb = get_app().pane
     if isinstance(nb, BaseNotebook):
         return len(nb.selected_indices) > 1
     return False

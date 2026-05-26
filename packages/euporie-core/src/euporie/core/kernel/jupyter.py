@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from jupyter_client import KernelClient
     from jupyter_client.kernelspec import KernelSpecManager
 
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
 
 
 log = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class JupyterKernel(BaseKernel):
 
     def __init__(
         self,
-        kernel_tab: KernelTab,
+        kernel_tab: KernelPane,
         default_callbacks: MsgCallbacks | None = None,
         allow_stdin: bool = False,
         *,

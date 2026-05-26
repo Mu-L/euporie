@@ -18,7 +18,7 @@ from apptk.filters.modes import (
 )
 
 from euporie.core.filters import (
-    kernel_tab_has_focus,
+    kernel_pane_has_focus,
     multiple_cells_selected,
 )
 from euporie.notebook.filters import (
@@ -31,16 +31,16 @@ from euporie.notebook.filters import (
 if TYPE_CHECKING:
     from apptk.key_binding.key_bindings import NotImplementedOrNone
 
-# euporie.notebook.tabs.log
+# euporie.notebook.panes.log
 
 
 @add_cmd()
 def _view_logs() -> None:
     """Open the logs in a new tab."""
-    from euporie.notebook.tabs.log import LogView
+    from euporie.notebook.panes.log import LogView
 
     app = get_app()
-    for tab in app.tabs:
+    for tab in app.panes:
         if isinstance(tab, LogView):
             break
     else:
@@ -49,7 +49,7 @@ def _view_logs() -> None:
     tab.focus()
 
 
-# euporie.notebook.tabs.notebook
+# euporie.notebook.panes.notebook
 
 
 @add_cmd(
@@ -58,9 +58,9 @@ def _view_logs() -> None:
 )
 def _enter_cell_edit_mode() -> None:
     """Enter cell edit mode."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.enter_edit_mode()
 
 
@@ -70,9 +70,9 @@ def _enter_cell_edit_mode() -> None:
 )
 def _exit_edit_mode() -> None:
     """Exit cell edit mode."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.exit_edit_mode()
 
 
@@ -82,9 +82,9 @@ def _exit_edit_mode() -> None:
 )
 def _run_selected_cells() -> None:
     """Run or render the current cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.run_selected_cells()
 
 
@@ -95,9 +95,9 @@ def _run_selected_cells() -> None:
 )
 def _run_and_select_next() -> None:
     """Run or render the current cells and select the next cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.run_selected_cells(advance=True)
 
 
@@ -107,9 +107,9 @@ def _run_and_select_next() -> None:
 )
 def _run_cell_and_insert_below() -> None:
     """Run or render the current cells and insert a new cell below."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.run_selected_cells(insert=True)
 
 
@@ -118,9 +118,9 @@ def _run_cell_and_insert_below() -> None:
 )
 def _run_all_cells() -> None:
     """Run or render all the cells in the current notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.run_all()
 
 
@@ -130,9 +130,9 @@ def _run_all_cells() -> None:
 )
 def _add_cell_above() -> None:
     """Add a new cell above the current."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.add_cell_above()
 
 
@@ -142,9 +142,9 @@ def _add_cell_above() -> None:
 )
 def _add_cell_below() -> None:
     """Add a new cell below the current."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.add_cell_below()
 
 
@@ -154,9 +154,9 @@ def _add_cell_below() -> None:
 )
 def _delete_cells() -> None:
     """Delete the current cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.delete()
 
 
@@ -167,9 +167,9 @@ def _delete_cells() -> None:
 )
 def _undelete_cells() -> None:
     """Undelete the last deleted cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.undelete()
 
 
@@ -179,9 +179,9 @@ def _undelete_cells() -> None:
 )
 def _cut_cells() -> None:
     """Cut the current cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.cut()
 
 
@@ -191,9 +191,9 @@ def _cut_cells() -> None:
 )
 def _copy_cells() -> None:
     """Copy the current cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.copy()
 
 
@@ -204,9 +204,9 @@ def _copy_cells() -> None:
 )
 def _copy_outputs() -> None:
     """Copy the cell's output to the clipboard."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.copy_outputs()
 
 
@@ -216,9 +216,9 @@ def _copy_outputs() -> None:
 )
 def _paste_cells() -> None:
     """Pate the previously copied cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.paste()
 
 
@@ -231,9 +231,9 @@ def _paste_cells() -> None:
 )
 def _merge_cells() -> None:
     """Merge the selected cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.merge()
 
 
@@ -243,9 +243,9 @@ def _merge_cells() -> None:
 )
 def _scroll_up() -> NotImplementedOrNone:
     """Scroll the page up a line."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         return nb.page.scroll(1)
     return None
 
@@ -256,9 +256,9 @@ def _scroll_up() -> NotImplementedOrNone:
 )
 def _scroll_down() -> NotImplementedOrNone:
     """Scroll the page down a line."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         return nb.page.scroll(-1)
     return None
 
@@ -269,9 +269,9 @@ def _scroll_down() -> NotImplementedOrNone:
 )
 def _scroll_up_5_lines() -> None:
     """Scroll the page up 5 lines."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.page.scroll(5)
 
 
@@ -281,9 +281,9 @@ def _scroll_up_5_lines() -> None:
 )
 def _scroll_down_5_lines() -> None:
     """Scroll the page down 5 lines."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.page.scroll(-5)
 
 
@@ -293,9 +293,9 @@ def _scroll_down_5_lines() -> None:
 )
 def _select_first_cell() -> None:
     """Select the first cell in the notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(0)
 
 
@@ -305,9 +305,9 @@ def _select_first_cell() -> None:
 )
 def _select_5th_previous_cell() -> None:
     """Go up 5 cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(nb.page.selected_slice.start - 5)
 
 
@@ -317,9 +317,9 @@ def _select_5th_previous_cell() -> None:
 )
 def _select_previous_cell() -> None:
     """Go up one cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(nb.page.selected_slice.start - 1)
 
 
@@ -329,9 +329,9 @@ def _select_previous_cell() -> None:
 )
 def _select_next_cell() -> None:
     """Select the next cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(nb.page.selected_slice.start + 1)
 
 
@@ -341,9 +341,9 @@ def _select_next_cell() -> None:
 )
 def _select_5th_next_cell() -> None:
     """Go down 5 cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(nb.page.selected_slice.start + 5)
 
 
@@ -353,9 +353,9 @@ def _select_5th_next_cell() -> None:
 )
 def _select_last_cell() -> None:
     """Select the last cell in the notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(len(nb.page.all_children()) - 1)
 
 
@@ -365,9 +365,9 @@ def _select_last_cell() -> None:
 )
 def _select_all_cells() -> None:
     """Select all cells in the notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.page.selected_slice = slice(
             0,
             len(nb.page.all_children()) + 1,
@@ -380,9 +380,9 @@ def _select_all_cells() -> None:
 )
 def _extend_cell_selection_to_top() -> None:
     """Extend the cell selection to the top of the notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(0, extend=True)
 
 
@@ -392,9 +392,9 @@ def _extend_cell_selection_to_top() -> None:
 )
 def _extend_cell_selection_up() -> None:
     """Extend the cell selection up a cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(nb.page._selected_slice.start - 1, extend=True)
 
 
@@ -404,9 +404,9 @@ def _extend_cell_selection_up() -> None:
 )
 def _extend_cell_selection_down() -> None:
     """Extend the cell selection down a cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(nb.page._selected_slice.start + 1, extend=True)
 
 
@@ -416,9 +416,9 @@ def _extend_cell_selection_down() -> None:
 )
 def _extend_cell_selection_to_bottom() -> None:
     """Extend the cell selection to the bottom of the notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.select(len(nb.json["cells"]) - 1, extend=True)
 
 
@@ -428,9 +428,9 @@ def _extend_cell_selection_to_bottom() -> None:
 )
 def _move_cells_up() -> None:
     """Move selected cells up."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.move(-1)
 
 
@@ -440,9 +440,9 @@ def _move_cells_up() -> None:
 )
 def _move_cells_down() -> None:
     """Move selected cells down."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.move(1)
 
 
@@ -452,9 +452,9 @@ def _move_cells_down() -> None:
 )
 def _cells_to_markdown() -> None:
     """Change selected cells to markdown cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.set_cell_type("markdown", clear=True)
             # Remove unallowed additional properties
@@ -470,9 +470,9 @@ def _cells_to_markdown() -> None:
 )
 def _cells_to_code() -> None:
     """Change selected cells to code cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.set_cell_type("code", clear=False)
 
@@ -483,9 +483,9 @@ def _cells_to_code() -> None:
 )
 def _cells_to_raw() -> None:
     """Change selected cells to raw cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.set_cell_type("raw", clear=True)
 
@@ -495,9 +495,9 @@ def _cells_to_raw() -> None:
 )
 def _clear_cell_outputs() -> None:
     """Clear the outputs of the selected cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.remove_outputs()
 
@@ -507,9 +507,9 @@ def _clear_cell_outputs() -> None:
 )
 def _clear_all_outputs() -> None:
     """Clear the outputs of the selected cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb._rendered_cells.values():
             cell.remove_outputs()
 
@@ -520,9 +520,9 @@ def _clear_all_outputs() -> None:
 )
 def _show_cell_inputs() -> None:
     """Expand the selected cells' inputs."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.show_input()
 
@@ -533,9 +533,9 @@ def _show_cell_inputs() -> None:
 )
 def _hide_cell_inputs() -> None:
     """Collapse the selected cells' inputs."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.hide_input()
 
@@ -545,9 +545,9 @@ def _hide_cell_inputs() -> None:
 )
 def _toggle_cell_inputs() -> None:
     """Toggle the visibility of the selected cells' inputs."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.toggle_input()
 
@@ -558,9 +558,9 @@ def _toggle_cell_inputs() -> None:
 )
 def _show_cell_outputs() -> None:
     """Expand the selected cells' outputs."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.show_output()
 
@@ -571,9 +571,9 @@ def _show_cell_outputs() -> None:
 )
 def _hide_cell_outputs() -> None:
     """Collapse the selected cells' outputs."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.hide_output()
 
@@ -583,9 +583,9 @@ def _hide_cell_outputs() -> None:
 )
 def _toggle_cell_outputs() -> None:
     """Toggle the visibility of the selected cells' outputs."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             cell.toggle_output()
 
@@ -597,9 +597,9 @@ def _toggle_cell_outputs() -> None:
 )
 def _reformat_cells() -> None:
     """Format the selected code cells."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         for cell in nb.cells:
             if cell.cell_type == "code":
                 cell.input_box.reformat()
@@ -608,9 +608,9 @@ def _reformat_cells() -> None:
 @add_cmd(keys=["F"], aliases=["fmt"], filter=notebook_has_focus & ~buffer_has_focus)
 def _reformat_notebook() -> None:
     """Automatically reformat all code cells in the notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.reformat()
 
 
@@ -620,9 +620,9 @@ def _reformat_notebook() -> None:
 )
 async def _edit_in_external_editor() -> None:
     """Edit cell in $EDITOR."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         config = nb.app.config
         await nb.cell.input_box.buffer.open_in_editor(
             validate_and_handle=config.run_after_external_edit,
@@ -636,9 +636,9 @@ async def _edit_in_external_editor() -> None:
 )
 def _split_cell() -> None:
     """Split the current cell at the cursor position."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.split_cell()
 
 
@@ -667,9 +667,9 @@ def _split_cell() -> None:
 )
 def _edit_previous_cell() -> None:
     """Move the cursor up to the previous cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         new_index = nb.cell.index - 1
         cells = nb.rendered_cells()
         if 0 <= new_index < len(cells):
@@ -701,9 +701,9 @@ def _edit_previous_cell() -> None:
 )
 def _edit_next_cell() -> None:
     """Move the cursor down to the next cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         new_index = nb.cell.index + 1
         cells = nb.rendered_cells()
         if 0 <= new_index < len(cells):
@@ -716,9 +716,9 @@ def _edit_next_cell() -> None:
 )
 def _scroll_output_left() -> None:
     """Scroll the cell output to the left."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.cell.output_area.scroll_left()
 
 
@@ -728,9 +728,9 @@ def _scroll_output_left() -> None:
 )
 def _scroll_output_right() -> None:
     """Scroll the cell output to the right."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.cell.output_area.scroll_right()
 
 
@@ -740,9 +740,9 @@ def _scroll_output_right() -> None:
 )
 def _scroll_output_left_more() -> None:
     """Scroll the cell output more to the left."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         scroll_left = nb.cell.output_area.scroll_left
         for _ in range(10):
             scroll_left()
@@ -754,20 +754,20 @@ def _scroll_output_left_more() -> None:
 )
 def _scroll_output_right_more() -> None:
     """Scroll the cell output more to the right."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         scroll_right = nb.cell.output_area.scroll_right
         for _ in range(10):
             scroll_right()
 
 
 @add_cmd(
-    filter=kernel_tab_has_focus & ~buffer_has_focus & ~display_has_focus,
+    filter=kernel_pane_has_focus & ~buffer_has_focus & ~display_has_focus,
 )
 def _restart_kernel_and_clear_all_outputs() -> None:
     """Restart the notebook's kernel and clear all cell output."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    if isinstance(nb := get_app().tab, Notebook):
+    if isinstance(nb := get_app().pane, Notebook):
         nb.restart_kernel(cb=_clear_all_outputs)

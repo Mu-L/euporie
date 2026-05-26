@@ -31,9 +31,9 @@ if TYPE_CHECKING:
     from apptk.layout.containers import AnyContainer, Window
 
     from euporie.core.config import Setting
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
 
-    KTParent = TypeVar("KTParent", bound=KernelTab)
+    KTParent = TypeVar("KTParent", bound=KernelPane)
 
     class OutputParent(Protocol[KTParent]):
         """An output's parent."""

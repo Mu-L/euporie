@@ -16,7 +16,7 @@ from apptk.layout.dimension import Dimension
 from apptk.layout.margins import ScrollbarMargin
 from upath import UPath
 
-from euporie.core.tabs.base import Tab
+from euporie.core.panes.base import Pane
 from euporie.core.widgets.forms import Button, Text
 from euporie.core.widgets.webview import WebViewControl
 
@@ -33,8 +33,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class WebTab(Tab):
-    """Tab class for displaying files."""
+class WebPane(Pane):
+    """Pane class for displaying web pages."""
 
     name = "Web Viewer"
     weight = 2

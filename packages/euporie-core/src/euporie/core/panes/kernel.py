@@ -20,13 +20,13 @@ from apptk.history import DummyHistory, InMemoryHistory
 from euporie.core.comm.registry import open_comm
 from euporie.core.completion import KernelCompleter, LspCompleter
 from euporie.core.diagnostics import Report
-from euporie.core.filters import kernel_tab_has_focus
+from euporie.core.filters import kernel_pane_has_focus
 from euporie.core.format import LspFormatter
 from euporie.core.history import KernelHistory
 from euporie.core.inspection import FirstInspector, KernelInspector, LspInspector
 from euporie.core.kernel import list_kernels
 from euporie.core.kernel.base import NoKernel
-from euporie.core.tabs.base import Tab
+from euporie.core.panes.base import Pane
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -65,8 +65,8 @@ def autosuggest_factory(kind: str, history: History) -> AutoSuggest:
         return DummyAutoSuggest()
 
 
-class KernelTab(Tab, metaclass=ABCMeta):
-    """A Tab which connects to a kernel."""
+class KernelPane(Pane, metaclass=ABCMeta):
+    """A `Panel` which connects to a kernel."""
 
     kernel_language: str
     _metadata: dict[str, Any]
@@ -76,7 +76,7 @@ class KernelTab(Tab, metaclass=ABCMeta):
     allow_stdin: bool
 
     commands = (
-        *Tab.commands,
+        *Pane.commands,
         "interrupt-kernel",
         "restart-kernel",
     )
@@ -480,8 +480,8 @@ class KernelTab(Tab, metaclass=ABCMeta):
     # ################################### Commands ####################################
 
     @staticmethod
-    @add_cmd(filter=kernel_tab_has_focus)
+    @add_cmd(filter=kernel_pane_has_focus)
     def _change_kernel() -> None:
         """Change the notebook's kernel."""
-        if isinstance(kt := get_app().tab, KernelTab):
+        if isinstance(kt := get_app().pane, KernelPane):
             kt.change_kernel()

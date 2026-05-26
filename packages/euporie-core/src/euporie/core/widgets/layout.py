@@ -30,7 +30,8 @@ from apptk.layout.dimension import to_dimension
 from apptk.mouse_events import MouseEventType
 from apptk.utils import Event
 from apptk.widgets.base import Frame
-from apptk.widgets.tab_bar import TabBarControl, TabBarTab
+from apptk.widgets.panel import Panel
+from apptk.widgets.tab_bar import TabBarControl
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -385,12 +386,12 @@ class TabbedSplit(StackedSplit):
         if self.active is not None:
             self.control.active = self.active
 
-    def load_tabs(self) -> list[TabBarTab]:
+    def load_tabs(self) -> list[Panel]:
         """Return a list of tabs for the current children."""
         return [
-            TabBarTab(
+            Panel(
                 title=title,
-                on_activate=partial(setattr, self, "active", i),
+                on_activate=lambda sender, i=i: setattr(self, "active", i),
             )
             for i, title in enumerate(self.titles)
         ]

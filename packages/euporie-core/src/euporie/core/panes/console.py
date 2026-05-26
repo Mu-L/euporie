@@ -26,8 +26,8 @@ from euporie.core.diagnostics import Report
 from euporie.core.kernel.base import MsgCallbacks
 from euporie.core.lsp import LspCell
 from euporie.core.nbformat import new_notebook
+from euporie.core.panes.kernel import KernelPane
 from euporie.core.style import KERNEL_STATUS_REPR
-from euporie.core.tabs.kernel import KernelTab
 from euporie.core.validation import KernelValidator
 from euporie.core.widgets.inputs import KernelInput, StdInput
 
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class BaseConsole(KernelTab):
+class BaseConsole(KernelPane):
     """Base class for Consoles.
 
     Provides common functionality for console implementations, including

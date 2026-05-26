@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any, ClassVar, TextIO, Unpack
 
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
 
 log = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class LocalPythonKernel(BaseKernel):
 
     def __init__(
         self,
-        kernel_tab: KernelTab,
+        kernel_tab: KernelPane,
         default_callbacks: MsgCallbacks | None = None,
         allow_stdin: bool = False,
         **kwargs: Any,

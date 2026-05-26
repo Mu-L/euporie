@@ -16,7 +16,7 @@ from apptk.layout.dimension import Dimension
 from apptk.layout.display import Display
 from apptk.mouse_events import MouseButton, MouseEventType
 
-from euporie.core.tabs.base import Tab
+from euporie.core.panes.base import Pane
 from euporie.core.widgets.file_browser import FileBrowser
 from euporie.core.widgets.forms import BaseButton, Button
 from euporie.core.widgets.layout import Box, Frame
@@ -37,8 +37,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class NewTab(Tab):
-    """Tab class for displaying files."""
+class NewPane(Pane):
+    """Pane class for displaying files."""
 
     name = "New Tab"
 

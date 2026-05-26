@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from apptk.key_binding.key_bindings import NotImplementedOrNone
     from apptk.mouse_events import MouseEvent as PtkMouseEvent
 
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
     from euporie.core.widgets.cell_outputs import OutputParent
 log = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class MPLCanvasModel(IpyWidgetComm):
 
     def __init__(
         self,
-        comm_container: KernelTab,
+        comm_container: KernelPane,
         comm_id: str,
         data: dict,
         buffers: Sequence[bytes],

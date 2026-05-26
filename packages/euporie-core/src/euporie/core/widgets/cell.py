@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from euporie.core.format import Formatter
     from euporie.core.inspection import Inspector
     from euporie.core.lsp import LspClient
-    from euporie.core.tabs.notebook import BaseNotebook
+    from euporie.core.panes.notebook import BaseNotebook
 
 
 log = logging.getLogger(__name__)

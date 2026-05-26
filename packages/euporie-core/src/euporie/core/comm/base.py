@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from apptk.layout.containers import AnyContainer
 
     from euporie.core.kernel.jupyter import JupyterKernel
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
     from euporie.core.widgets.cell_outputs import OutputParent
 
 
@@ -66,7 +66,7 @@ class Comm(metaclass=ABCMeta):
 
     def __init__(
         self,
-        comm_container: KernelTab,
+        comm_container: KernelPane,
         comm_id: str,
         data: dict,
         buffers: Sequence[memoryview | bytearray | bytes],

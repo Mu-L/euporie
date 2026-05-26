@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from apptk.formatted_text.base import AnyFormattedText
     from apptk.layout.containers import AnyContainer, _Split
 
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
     from euporie.core.widgets.cell_outputs import OutputParent
     from euporie.core.widgets.forms import SelectableWidget, ToggleableWidget
     from euporie.core.widgets.layout import StackedSplit
@@ -134,7 +134,7 @@ class IpyWidgetComm(Comm, metaclass=ABCMeta):
 
     def __init__(
         self,
-        comm_container: KernelTab,
+        comm_container: KernelPane,
         comm_id: str,
         data: dict,
         buffers: Sequence[memoryview | bytearray | bytes],
@@ -229,7 +229,7 @@ class OutputModel(IpyWidgetComm):
 
     def __init__(
         self,
-        comm_container: KernelTab,
+        comm_container: KernelPane,
         comm_id: str,
         data: dict,
         buffers: Sequence[memoryview | bytearray | bytes],
@@ -1447,7 +1447,7 @@ class ColorPickerModel(TextBoxIpyWidgetComm):
 
 
 def open_comm_ipywidgets(
-    comm_container: KernelTab,
+    comm_container: KernelPane,
     comm_id: str,
     data: dict,
     buffers: Sequence[memoryview | bytearray | bytes],

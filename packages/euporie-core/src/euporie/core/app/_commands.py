@@ -8,7 +8,7 @@ from apptk.application.current import get_app
 from apptk.commands import add_cmd
 from apptk.filters import buffer_has_focus
 
-from euporie.core.filters import tab_has_focus, tab_type_has_focus
+from euporie.core.filters import pane_has_focus, pane_type_has_focus
 
 if TYPE_CHECKING:
     from apptk.key_binding.key_processor import KeyPressEvent
@@ -46,22 +46,22 @@ def _open_file(path: str = "") -> None:
             dialog.show()
 
 
-@add_cmd(keys=["c-w"], aliases=["bc"], filter=tab_has_focus, menu_title="Close File")
+@add_cmd(keys=["c-w"], aliases=["bc"], filter=pane_has_focus, menu_title="Close File")
 def _close_tab() -> None:
     """Close the current tab."""
     get_app().close_tab()
 
 
-@add_cmd(keys=["c-pagedown"], aliases=["bn"], filter=tab_has_focus)
+@add_cmd(keys=["c-pagedown"], aliases=["bn"], filter=pane_has_focus)
 def _next_tab() -> None:
     """Switch to the next tab."""
-    get_app().tab_idx += 1
+    get_app().pane_idx += 1
 
 
-@add_cmd(keys=["c-pageup"], aliases=["bp"], filter=tab_has_focus)
+@add_cmd(keys=["c-pageup"], aliases=["bp"], filter=pane_has_focus)
 def _previous_tab() -> None:
     """Switch to the previous tab."""
-    get_app().tab_idx -= 1
+    get_app().pane_idx -= 1
 
 
 @add_cmd(keys=["tab"], filter=~buffer_has_focus)
@@ -102,8 +102,8 @@ def _go_to(event: KeyPressEvent, index: int = 0) -> None:
     if buffer_has_focus():
         buffer = get_app().current_buffer
         buffer.cursor_position = len("".join(buffer.text.splitlines(True)[:index]))
-    elif tab_type_has_focus("euporie.notebook.tabs.notebook:Notebook")():
-        from euporie.notebook.tabs.notebook import Notebook
+    elif pane_type_has_focus("euporie.notebook.panes.notebook:Notebook")():
+        from euporie.notebook.panes.notebook import Notebook
 
-        if isinstance(nb := get_app().tab, Notebook):
+        if isinstance(nb := get_app().pane, Notebook):
             nb.select(index)

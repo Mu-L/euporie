@@ -28,10 +28,10 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class Tab(metaclass=ABCMeta):
+class Pane(metaclass=ABCMeta):
     """Base class for interface tabs."""
 
-    _registry: ClassVar[set[type[Tab]]] = set()
+    _registry: ClassVar[set[type[Pane]]] = set()
     name: str | None = None
     weight: int = 0
     mime_types: ClassVar[set[str]] = set()
@@ -50,7 +50,7 @@ class Tab(metaclass=ABCMeta):
         """Compile a registry of named tabs."""
         super().__init_subclass__(**kwargs)
         if cls.name:
-            Tab._registry.add(cls)
+            Pane._registry.add(cls)
 
     def __init__(self, app: BaseApp, path: Path | None = None) -> None:
         """Call when the tab is created."""

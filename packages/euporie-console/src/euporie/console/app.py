@@ -30,7 +30,7 @@ from apptk.widgets.toolbars import (
 )
 
 from euporie.console import settings as console_settings
-from euporie.console.tabs.console import Console
+from euporie.console.panes.console import Console
 from euporie.core import settings as core_settings
 from euporie.core.app.app import BaseApp
 from euporie.core.filters import has_dialog
@@ -115,8 +115,6 @@ class ConsoleApp(BaseApp):
 
         self.bindings_to_load += ["euporie.console.app:ConsoleApp"]
 
-        self.tabs = []
-
     def pre_run(self, app: Application | None = None) -> None:
         """Continue loading the app."""
         super().pre_run(app)
@@ -164,13 +162,13 @@ class ConsoleApp(BaseApp):
         self.dialogs["shortcuts"] = ShortcutsDialog(self)
         self.dialogs["confirm"] = ConfirmDialog(self)
 
-        self.tabs = [Console(self)]
+        self.panes = [Console(self)]
 
         return FloatContainer(
             DisableMouseOnScroll(
                 HSplit(
                     [
-                        self.tabs[0],
+                        self.panes[0],
                         ConditionalContainer(
                             HSplit(
                                 [
@@ -216,7 +214,7 @@ class ConsoleApp(BaseApp):
         style: str = "",
     ) -> None:
         """Close all tabs on exit."""
-        for tab in self.tabs:
+        for tab in self.panes:
             tab.close()
 
         if result is not None:

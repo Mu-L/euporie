@@ -7,11 +7,11 @@ from pkgutil import resolve_name
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from euporie.core.tabs.base import Tab
+    from euporie.core.panes.base import Pane
 
 
 @dataclass
-class TabRegistryEntry:
+class PaneRegistryEntry:
     """Class to store tab information."""
 
     path: str
@@ -21,11 +21,11 @@ class TabRegistryEntry:
     weight: int = 0
 
     @property
-    def tab_class(self) -> type[Tab]:
+    def tab_class(self) -> type[Pane]:
         """Import and return the tab class."""
         return resolve_name(self.path)
 
-    def __lt__(self, other: TabRegistryEntry) -> bool:
+    def __lt__(self, other: PaneRegistryEntry) -> bool:
         """Sort by weight."""
         return self.weight < other.weight
 
@@ -34,10 +34,10 @@ class TabRegistryEntry:
         return hash(self.path)
 
     def __eq__(self, other: object) -> bool:
-        """Compare TabRegistryEntry objects based on their path."""
-        if not isinstance(other, TabRegistryEntry):
+        """Compare PaneRegistryEntry objects based on their path."""
+        if not isinstance(other, PaneRegistryEntry):
             return NotImplemented
         return self.path == other.path
 
 
-_TAB_REGISTRY: list[TabRegistryEntry] = []
+_PANE_REGISTRY: list[PaneRegistryEntry] = []

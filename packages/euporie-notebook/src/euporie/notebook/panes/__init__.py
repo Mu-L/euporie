@@ -1,43 +1,43 @@
-"""Tab for use in euporie notebook editor."""
+"""Panes for use in euporie notebook editor."""
 
 from apptk.convert.mime import MIME_FORMATS
 from apptk.filters.environment import have_modules
 
 from euporie.core.nbformat import NOTEBOOK_EXTENSIONS
-from euporie.core.tabs import _TAB_REGISTRY, TabRegistryEntry
+from euporie.core.panes import _PANE_REGISTRY, PaneRegistryEntry
 
-_TAB_REGISTRY.extend(
+_PANE_REGISTRY.extend(
     [
-        TabRegistryEntry(
-            path="euporie.notebook.tabs.display:DisplayTab",
+        PaneRegistryEntry(
+            path="euporie.notebook.panes.display:DisplayPane",
             name="File Viewer",
             mime_types=set(MIME_FORMATS.keys()),
         ),
-        TabRegistryEntry(
-            path="euporie.notebook.tabs.edit:EditorTab",
+        PaneRegistryEntry(
+            path="euporie.notebook.panes.edit:EditorPane",
             name="Text Editor",
             mime_types={"text/*"},
             weight=1,
         ),
-        TabRegistryEntry(
-            path="euporie.notebook.tabs.json:JsonTab",
+        PaneRegistryEntry(
+            path="euporie.notebook.panes.json:JsonPane",
             name="JSON Viewer",
             mime_types={"*json"},
             file_extensions={".json": None},
         ),
-        TabRegistryEntry(
-            path="euporie.notebook.tabs.notebook:Notebook",
+        PaneRegistryEntry(
+            path="euporie.notebook.panes.notebook:Notebook",
             name="Notebook Editor",
             mime_types={"application/x-ipynb+json"},
             file_extensions=dict.fromkeys(NOTEBOOK_EXTENSIONS),
             weight=3,
         ),
-        TabRegistryEntry(
-            path="euporie.notebook.tabs.console:Console",
+        PaneRegistryEntry(
+            path="euporie.notebook.panes.console:Console",
             name="Console",
         ),
-        TabRegistryEntry(
-            path="euporie.notebook.tabs.web:WebTab",
+        PaneRegistryEntry(
+            path="euporie.notebook.panes.web:WebPane",
             name="Web Viewer",
             mime_types={"text/html", "text/markdown"},
             weight=2,
@@ -46,9 +46,9 @@ _TAB_REGISTRY.extend(
 )
 
 if have_modules("ptterm")():
-    _TAB_REGISTRY.append(
-        TabRegistryEntry(
-            path="euporie.notebook.tabs.terminal:TerminalTab",
+    _PANE_REGISTRY.append(
+        PaneRegistryEntry(
+            path="euporie.notebook.panes.terminal:TerminalPane",
             name="Terminal",
         )
     )

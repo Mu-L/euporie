@@ -15,7 +15,7 @@ from euporie.core.comm.ipywidgets import (
     _separate_buffers,
 )
 from euporie.core.kernel.jupyter import JupyterKernel
-from euporie.core.tabs.kernel import KernelTab
+from euporie.core.panes.kernel import KernelPane
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -24,19 +24,19 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def kernel_tab() -> KernelTab:
-    """Create a `Mock` instance of the `KernelTab` class.
+def kernel_tab() -> KernelPane:
+    """Create a `Mock` instance of the `KernelPane` class.
 
     Returns:
-        A `Mock` instance of the `KernelTab` class.
+        A `Mock` instance of the `KernelPane` class.
     """
-    kt = Mock(spec=KernelTab)
+    kt = Mock(spec=KernelPane)
     kt.kernel = Mock(spec=JupyterKernel)
     return kt
 
 
 @pytest.fixture
-def output_parent(kernel_tab: KernelTab) -> OutputParent:
+def output_parent(kernel_tab: KernelPane) -> OutputParent:
     """Create a mocked parent for a comm view."""
 
     class MockOutputParent:
@@ -51,11 +51,11 @@ def output_parent(kernel_tab: KernelTab) -> OutputParent:
 
 
 @pytest.fixture
-def icomm(kernel_tab: KernelTab) -> Generator[IpyWidgetComm, None, None]:
+def icomm(kernel_tab: KernelPane) -> Generator[IpyWidgetComm, None, None]:
     """Create an `UnimplementedModel` instance of the `IpyWidgetComm` class.
 
     Args:
-        kernel_tab: A `KernelTab` instance to use for the `IpyWidgetComm` object.
+        kernel_tab: A `KernelPane` instance to use for the `IpyWidgetComm` object.
 
     Returns:
         An `UnimplementedModel` instance of the `IpyWidgetComm` class.

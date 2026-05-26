@@ -14,7 +14,7 @@ from apptk.layout.containers import (
 from apptk.layout.dimension import Dimension
 from apptk.layout.print import PrintingContainer
 
-from euporie.core.tabs.notebook import BaseNotebook
+from euporie.core.panes.notebook import BaseNotebook
 from euporie.core.widgets.cell import Cell
 from euporie.core.widgets.layout import Box
 
@@ -121,7 +121,7 @@ class PreviewNotebook(BaseNotebook):
     def before_render(self, app: Application[Any]) -> None:
         """Run the cell before rendering it if needed."""
         if (
-            self.app.tab == self
+            self.app.pane == self
             and self.cell_index == 0
             and self.app.config.show_filenames
         ):
@@ -139,7 +139,7 @@ class PreviewNotebook(BaseNotebook):
 
     def after_render(self, app: Application[Any]) -> None:
         """Close the tab if all cells have been rendered."""
-        if self.app.tab == self:
+        if self.app.pane == self:
             if self.cell_index < len(self.json["cells"]) - 1:
                 self.cell_index += 1
             else:

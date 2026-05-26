@@ -89,7 +89,7 @@ if TYPE_CHECKING:
     from euporie.core.bars.status import StatusBarFields
     from euporie.core.format import Formatter
     from euporie.core.inspection import Inspector
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
 
 
 log = logging.getLogger(__name__)
@@ -124,7 +124,7 @@ class KernelInput(TextArea):
 
     def __init__(
         self,
-        kernel_tab: KernelTab,
+        kernel_tab: KernelPane,
         text: str = "",
         multiline: FilterOrBool = True,
         password: FilterOrBool = False,
@@ -445,10 +445,10 @@ class KernelInput(TextArea):
     )
     async def _show_contextual_help() -> None:
         """Display contextual help."""
-        from euporie.core.tabs.kernel import KernelTab
+        from euporie.core.panes.kernel import KernelPane
 
-        tab = get_app().tab
-        if isinstance(tab, KernelTab) and (input_box := tab.current_input) is not None:
+        tab = get_app().pane
+        if isinstance(tab, KernelPane) and (input_box := tab.current_input) is not None:
             await input_box.inspect()
 
     @staticmethod
@@ -473,11 +473,11 @@ class KernelInput(TextArea):
         """Format the contents of the current input field."""
         from apptk.application.current import get_app
 
-        from euporie.core.tabs.kernel import KernelTab
+        from euporie.core.panes.kernel import KernelPane
 
         if (
-            (tab := get_app().tab)
-            and (isinstance(tab, KernelTab))
+            (tab := get_app().pane)
+            and (isinstance(tab, KernelPane))
             and (current_input := tab.current_input)
         ):
             current_input.reformat()
@@ -486,7 +486,7 @@ class KernelInput(TextArea):
 class StdInput:
     """A widget to accept kernel input."""
 
-    def __init__(self, kernel_tab: KernelTab) -> None:
+    def __init__(self, kernel_tab: KernelPane) -> None:
         """Create a new kernel input box."""
         from euporie.core.widgets.forms import LabelledWidget, Text
 

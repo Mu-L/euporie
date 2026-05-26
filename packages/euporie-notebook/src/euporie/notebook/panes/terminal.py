@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from euporie.core.tabs.base import Tab
+from euporie.core.panes.base import Pane
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class TerminalTab(Tab):
+class TerminalPane(Pane):
     """Tab class for an interactive terminal."""
 
     name = "Terminal"

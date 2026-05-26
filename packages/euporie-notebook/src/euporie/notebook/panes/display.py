@@ -13,8 +13,8 @@ from apptk.layout.dimension import Dimension
 from apptk.layout.display import Display
 from apptk.layout.margins import ScrollbarMargin
 
+from euporie.core.panes.base import Pane
 from euporie.core.path import safe_write
-from euporie.core.tabs.base import Tab
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class DisplayTab(Tab):
-    """Tab class for displaying files."""
+class DisplayPane(Pane):
+    """Pane class for displaying files."""
 
     name = "File Viewer"
     mime_types: ClassVar[set[str]] = set(MIME_FORMATS.keys())

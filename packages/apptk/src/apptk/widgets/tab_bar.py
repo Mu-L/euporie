@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import TYPE_CHECKING, ClassVar, NamedTuple
+from typing import TYPE_CHECKING, ClassVar
 
 from apptk.border import OutsetGrid
 from apptk.cache import SimpleCache
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
     from apptk.border import GridStyle
     from apptk.formatted_text.base import (
-        AnyFormattedText,
         OneStyleAndTextTuple,
         StyleAndTextTuples,
     )
@@ -31,24 +30,9 @@ if TYPE_CHECKING:
         NotImplementedOrNone,
     )
     from apptk.mouse_events import MouseEvent
+    from apptk.widgets.panel import Panel
 
 log = logging.getLogger(__name__)
-
-
-class TabBarTab(NamedTuple):
-    """A class representing a tab and its callbacks."""
-
-    title: AnyFormattedText
-    on_activate: Callable[[], NotImplementedOrNone]
-    on_deactivate: Callable[[], NotImplementedOrNone] | None = None
-    on_close: Callable[[], NotImplementedOrNone] | None = None
-    closeable: bool = False
-
-    def __hash__(self) -> int:
-        """Hash the Tab based on current title value."""
-        return hash(tuple(to_formatted_text(self.title))) * hash(
-            (self.on_activate, self.on_deactivate, self.on_close, self.closeable)
-        )
 
 
 class TabBarControl(UIControl):
@@ -60,8 +44,8 @@ class TabBarControl(UIControl):
 
     def __init__(
         self,
-        tabs: Sequence[TabBarTab] | Callable[[], Sequence[TabBarTab]],
-        active: int | Callable[[], int],
+        tabs: Sequence[Panel] | Callable[[], Sequence[Panel]],
+        active: int | None | Callable[[], int | None],
         spacing: int = 1,
         max_title_width: int = 30,
         grid: GridStyle = OutsetGrid,
@@ -69,9 +53,8 @@ class TabBarControl(UIControl):
         """Create a new tab bar instance.
 
         Args:
-            tabs: A list to tuples describing the tab title and the callback to run
-                when the tab is activated.
-            active: The index of the currently active tab
+            tabs: A list of Panel instances, or a callable returning such a list.
+            active: The index of the currently active tab, or None for no highlight
             spacing: The number of characters between the tabs
             max_title_width: The maximum width of the title to display
             grid: The grid style to use for drawing borders
@@ -80,19 +63,20 @@ class TabBarControl(UIControl):
         self._tabs = tabs
         self.spacing = spacing
         self.max_title_width = max_title_width
-        self._active = active
+        self._active: int | None | Callable[[], int | None] = active
         self._last_active: int | None = None
         self.scroll = -1
         self.grid = grid
 
-        self.mouse_handlers: dict[int, Callable[[], NotImplementedOrNone] | None] = {}
+        self.mouse_handlers: dict[int, Callable[[], None] | None] = {}
+        self.col_to_tab: dict[int, int] = {}
         self.tab_widths: list[int] = []
         # Caches
         self.render_tab = lru_cache(self._render_tab)
         self._content_cache: SimpleCache = SimpleCache(maxsize=50)
 
     @property
-    def tabs(self) -> list[TabBarTab]:
+    def tabs(self) -> list[Panel]:
         """Return the tab-bar's tabs."""
         if callable(self._tabs):
             return list(self._tabs())
@@ -100,33 +84,20 @@ class TabBarControl(UIControl):
             return list(self._tabs)
 
     @tabs.setter
-    def tabs(self, tabs: Sequence[TabBarTab]) -> None:
+    def tabs(self, tabs: Sequence[Panel]) -> None:
         """Set the tab bar's current tabs."""
         self._tabs = tabs
 
     @property
-    def active(self) -> int:
-        """Return the index of the active tab."""
+    def active(self) -> int | None:
+        """Return the index of the active tab, or None if no tab is highlighted."""
         current_active = self._active() if callable(self._active) else self._active
 
-        # Check if active tab has changed
+        # Check if active tab has changed for scroll tracking
         if self._last_active != current_active:
-            # Handle tab switching
-            if self._last_active is not None and 0 <= self._last_active < len(
-                self.tabs
-            ):
-                old_tab = self.tabs[self._last_active]
-                if callable(on_deactivate := old_tab.on_deactivate):
-                    on_deactivate()
-
-            # Call on_activate for new tab
-            if current_active is not None and 0 <= current_active < len(self.tabs):
-                new_tab = self.tabs[current_active]
-                if callable(on_activate := new_tab.on_activate):
-                    on_activate()
-
             # Ensure active tab is visible
-            self.scroll_to(current_active)
+            if current_active is not None:
+                self.scroll_to(current_active)
 
             # Update last known active value
             self._last_active = current_active
@@ -134,7 +105,7 @@ class TabBarControl(UIControl):
         return current_active
 
     @active.setter
-    def active(self, active: int | Callable[[], int]) -> None:
+    def active(self, active: int | None | Callable[[], int | None]) -> None:
         """Set the currently active tab."""
         # Store new active value
         self._active = active
@@ -167,22 +138,40 @@ class TabBarControl(UIControl):
         self.available_width = width
 
         def get_content() -> tuple[
-            UIContent, dict[int, Callable[[], NotImplementedOrNone] | None]
+            UIContent,
+            dict[int, Callable[[], None] | None],
+            dict[int, int],
         ]:
             *fragment_lines, mouse_handlers = self.render(width)
 
-            return UIContent(
-                get_line=lambda i: fragment_lines[i],
-                line_count=len(fragment_lines),
-                show_cursor=False,
-            ), mouse_handlers
+            return (
+                UIContent(
+                    get_line=lambda i: fragment_lines[i],
+                    line_count=len(fragment_lines),
+                    show_cursor=False,
+                ),
+                mouse_handlers,
+                self._temp_col_to_tab,
+            )
 
-        key = (hash(tuple(self.tabs)), width, self.active, self.scroll)
-        ui_content, self.mouse_handlers = self._content_cache.get(key, get_content)
+        key = (
+            tuple(
+                (id(tab), hash(tuple(to_formatted_text(tab.title))))
+                for tab in self.tabs
+            ),
+            width,
+            self.active,
+            self.scroll,
+        )
+        ui_content, self.mouse_handlers, self.col_to_tab = self._content_cache.get(
+            key, get_content
+        )
         return ui_content
 
-    def scroll_to(self, active: int) -> None:
+    def scroll_to(self, active: int | None) -> None:
         """Adjust scroll position to ensure the active tab is visible."""
+        if active is None:
+            return
         # Calculate position of active tab
         pos = self.spacing  # Initial spacing
         for i in range(len(self.tabs)):
@@ -205,9 +194,9 @@ class TabBarControl(UIControl):
     def _render_tab(
         self,
         title: tuple[OneStyleAndTextTuple, ...],
-        on_activate: Callable[[], NotImplementedOrNone],
-        on_deactivate: Callable[[], NotImplementedOrNone] | None,
-        on_close: Callable[[], NotImplementedOrNone] | None,
+        on_activate: Callable[[], None],
+        on_deactivate: Callable[[], None] | None,
+        on_close: Callable[[], None] | None,
         closeable: bool,
         active: bool,
         max_title_width: int,
@@ -215,7 +204,7 @@ class TabBarControl(UIControl):
     ) -> tuple[
         StyleAndTextTuples,
         StyleAndTextTuples,
-        list[Callable[[], NotImplementedOrNone] | None],
+        list[Callable[[], None] | None],
     ]:
         """Render the tab as formatted text.
 
@@ -241,7 +230,7 @@ class TabBarControl(UIControl):
 
         top_line: StyleAndTextTuples = explode_text_fragments([])
         tab_line: StyleAndTextTuples = explode_text_fragments([])
-        mouse_handlers: list[Callable[[], NotImplementedOrNone] | None] = []
+        mouse_handlers: list[Callable[[], None] | None] = []
 
         # Add top edge over title
         top_line.append(
@@ -285,12 +274,13 @@ class TabBarControl(UIControl):
     ) -> tuple[
         StyleAndTextTuples,
         StyleAndTextTuples,
-        dict[int, Callable[[], NotImplementedOrNone] | None],
+        dict[int, Callable[[], None] | None],
     ]:
         """Render the tab-bar as lines of formatted text."""
         top_line: StyleAndTextTuples = []
         tab_line: StyleAndTextTuples = []
-        mouse_handlers: dict[int, Callable[[], NotImplementedOrNone] | None] = {}
+        mouse_handlers: dict[int, Callable[[], None] | None] = {}
+        self._temp_col_to_tab: dict[int, int] = {}
         pos = 0
         full = 0
 
@@ -300,8 +290,8 @@ class TabBarControl(UIControl):
                 max_title_width=self.max_title_width,
                 on_activate=tab.on_activate,
                 on_deactivate=tab.on_deactivate,
-                on_close=tab.on_close,
-                closeable=tab.closeable,
+                on_close=tab.on_close if tab.closeable() else None,
+                closeable=tab.closeable(),
                 active=(self.active == j),
                 grid=self.grid,
             )
@@ -333,13 +323,14 @@ class TabBarControl(UIControl):
                 pos += 1
             full += 1
 
-        for rendering in renderings:
+        for j, rendering in enumerate(renderings):
             # Add the rendered tab content
             for tab_top, tab_bottom, handler in zip(*rendering):
                 if full >= scroll:
                     top_line.append(tab_top)
                     tab_line.append(tab_bottom)
                     mouse_handlers[pos] = handler
+                    self._temp_col_to_tab[pos] = j
                     pos += 1
                 full += 1
                 if pos == width:
@@ -385,35 +376,39 @@ class TabBarControl(UIControl):
         row = mouse_event.position.y
         col = mouse_event.position.x
 
-        if row == 1 and mouse_event.event_type == MouseEventType.MOUSE_UP:
-            if mouse_event.button == MouseButton.LEFT and callable(
-                handler := self.mouse_handlers.get(col)
+        if row == 1:
+            if mouse_event.event_type == MouseEventType.MOUSE_DOWN:
+                if mouse_event.button == MouseButton.LEFT and callable(
+                    handler := self.mouse_handlers.get(col)
+                ):
+                    # Activate the tab
+                    handler()
+                    return None
+
+            elif (
+                mouse_event.event_type == MouseEventType.MOUSE_UP
+                and mouse_event.button == MouseButton.MIDDLE
             ):
-                # Activate the tab
-                handler()
-                return None
-            elif mouse_event.button == MouseButton.MIDDLE:
                 if callable(handler := self.mouse_handlers.get(col)):
                     # Activate tab
                     handler()
                     # Close the now active tab
                     tabs = self.tabs
                     tab = tabs[self.active]
-                    if tab.closeable and callable(tab.on_close):
+                    if tab.closeable():
                         tab.on_close()
                 return None
 
         tabs = self.tabs
+        current_active = self.active if self.active is not None else 0
         if mouse_event.event_type == MouseEventType.SCROLL_UP:
-            index = max(self.active - 1, 0)
-            if index != self.active:
-                if callable(activate := tabs[index].on_activate):
-                    activate()
+            index = max(current_active - 1, 0)
+            if index != current_active:
+                tabs[index].on_activate()
                 return None
         elif mouse_event.event_type == MouseEventType.SCROLL_DOWN:
-            index = min(self.active + 1, len(tabs) - 1)
-            if index != self.active:
-                if callable(activate := tabs[index].on_activate):
-                    activate()
+            index = min(current_active + 1, len(tabs) - 1)
+            if index != current_active:
+                tabs[index].on_activate()
                 return None
         return NotImplemented

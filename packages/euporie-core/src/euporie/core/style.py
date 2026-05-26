@@ -260,13 +260,13 @@ def menu_styles(cp: ColorPalette) -> dict[str, str]:
 def tab_bar_styles(cp: ColorPalette) -> dict[str, str]:
     """Generate tab bar styles."""
     return {
-        "app-tab-bar": f"bg:{cp.bg.less(0.15)}",
-        "app-tab-bar border": f"fg:{cp.bg.more(0.1)}",
-        "app-tab-bar tab inactive": f"fg:{cp.fg.more(0.5)}",
-        "app-tab-bar tab inactive border": f"fg:{cp.bg.more(0.15)}",
-        "app-tab-bar tab active": "bold fg:default bg:default",
-        "app-tab-bar tab active close": "fg:darkred",
-        "app-tab-bar tab active border top": f"fg:{cp.hl} bg:{cp.bg.less(0.15)}",
+        "app tab-bar": f"bg:{cp.bg.less(0.15)}",
+        "app tab-bar border": f"fg:{cp.bg.more(0.1)}",
+        "app tab-bar tab inactive": f"fg:{cp.fg.more(0.5)}",
+        "app tab-bar tab inactive border": f"fg:{cp.bg.more(0.15)}",
+        "app tab-bar tab active": "bold fg:default bg:default",
+        "app tab-bar tab active close": "fg:darkred",
+        "app tab-bar tab active border top": f"fg:{cp.hl} bg:{cp.bg.less(0.15)}",
     }
 
 

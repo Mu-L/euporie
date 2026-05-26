@@ -13,7 +13,7 @@ from apptk.widgets import SearchToolbar
 from apptk.widgets.formatted_text_area import FormattedTextArea
 
 from euporie.core.log import LOG_QUEUE, QueueHandler
-from euporie.core.tabs.base import Tab
+from euporie.core.panes.base import Pane
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from euporie.core.app.app import BaseApp
 
 
-class LogView(Tab):
+class LogView(Pane):
     """A tab which allows you to view log entries."""
 
     def __init__(self, app: BaseApp, path: Path | None = None) -> None:

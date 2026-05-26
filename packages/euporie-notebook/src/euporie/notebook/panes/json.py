@@ -10,7 +10,7 @@ from apptk.layout.containers import MarginContainer, VSplit, to_container
 from apptk.layout.dimension import Dimension
 from apptk.layout.margins import ScrollbarMargin
 
-from euporie.core.tabs.base import Tab
+from euporie.core.panes.base import Pane
 from euporie.core.widgets.tree import JsonView
 
 if TYPE_CHECKING:
@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class JsonTab(Tab):
-    """Tab class for JSON data."""
+class JsonPane(Pane):
+    """Pane class for JSON data."""
 
     name = "JSON Viewer"
     mime_types: ClassVar[set[str]] = {"*json"}

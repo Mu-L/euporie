@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
     from typing import Any
 
-    from euporie.core.comm.base import Comm, KernelTab
+    from euporie.core.comm.base import Comm, KernelPane
 
 TARGET_CLASSES: dict[str, str] = {
     "jupyter.widget": "euporie.core.comm.ipywidgets:open_comm_ipywidgets"
@@ -19,7 +19,7 @@ TARGET_CLASSES: dict[str, str] = {
 
 
 def open_comm(
-    comm_container: KernelTab,
+    comm_container: KernelPane,
     content: dict[str, Any],
     buffers: Sequence[bytes],
 ) -> Comm:
@@ -39,7 +39,7 @@ def open_comm(
     """
     target_name = content.get("target_name", "")
     if path := TARGET_CLASSES.get(target_name):
-        TargetClass: Callable[[KernelTab, str, dict, Sequence[bytes]], Comm] = (
+        TargetClass: Callable[[KernelPane, str, dict, Sequence[bytes]], Comm] = (
             resolve_name(path)
         )
     else:

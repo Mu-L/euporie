@@ -18,7 +18,7 @@ from apptk.output.vt100 import Vt100_Output
 from euporie.core import settings as core_settings
 from euporie.core.app.app import BaseApp
 from euporie.preview import settings as preview_settings
-from euporie.preview.tabs.notebook import PreviewNotebook
+from euporie.preview.panes.notebook import PreviewNotebook
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from apptk.output import Output
 
     from euporie.core.config._setting import Setting
-    from euporie.core.tabs.base import Tab
+    from euporie.core.panes.base import Pane
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ class PreviewApp(BaseApp):
         # Select the first tab after files are opened
         self.pre_run_callables.append(partial(setattr, self, "tab_idx", 0))
 
-    def get_file_tab(self, path: Path) -> type[Tab]:
+    def get_file_tab(self, path: Path) -> type[Pane]:
         """Return the tab to use for a file path."""
         return PreviewNotebook
 
@@ -121,14 +121,14 @@ class PreviewApp(BaseApp):
     def load_container(self) -> FloatContainer:
         """Return a container with all opened tabs."""
         return FloatContainer(
-            DynamicContainer(lambda: self.tab or Window()),
+            DynamicContainer(lambda: self.pane or Window()),
             floats=cast("list[Float]", self.floats),
         )
 
-    def cleanup_closed_tab(self, tab: Tab) -> None:
+    def cleanup_closed_tab(self, tab: Pane) -> None:
         """Exit if all tabs are closed."""
         super().cleanup_closed_tab(tab)
-        if not self.tabs:
+        if not self.panes:
             self._is_running = False
             self.exit()
         self.draw(render_as_done=True)

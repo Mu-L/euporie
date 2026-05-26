@@ -10,13 +10,13 @@ from apptk.layout.containers import Window
 from apptk.layout.display import Display
 
 from euporie.core.comm.base import Comm, CommView, UnimplementedComm
-from euporie.core.tabs.kernel import KernelTab
+from euporie.core.panes.kernel import KernelPane
 
 
 class MockOutputParent:
     """An output's parent."""
 
-    kernel_tab = Mock(spec=KernelTab)
+    kernel_tab = Mock(spec=KernelPane)
 
     def refresh(self, now: bool = True) -> None:
         """Update the parent container."""
@@ -25,7 +25,7 @@ class MockOutputParent:
 @pytest.fixture
 def comm() -> UnimplementedComm:
     """Create an `UnimplementedComm` instance of the `Comm` class."""
-    comm_container = Mock(spec=KernelTab)
+    comm_container = Mock(spec=KernelPane)
     comm_id = "1234"
     data = {"key": "value"}
     buffers = [b"buffer1", b"buffer2"]

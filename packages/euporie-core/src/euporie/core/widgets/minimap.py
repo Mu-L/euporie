@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from apptk.layout.controls import GetLinePrefixCallable
     from apptk.mouse_events import MouseEvent
 
-    from euporie.core.tabs.base import Tab
+    from euporie.core.panes.base import Pane
 
 
 log = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ class MiniMapControl(UIControl):
         """Tell whether this user control is focusable."""
         return True
 
-    def _get_buffers(self, tab: Tab) -> dict[Buffer, Window]:
+    def _get_buffers(self, tab: Pane) -> dict[Buffer, Window]:
         """Get all buffers from the current tab.
 
         Args:
@@ -157,7 +157,7 @@ class MiniMapControl(UIControl):
 
     def create_content(self, width: int, height: int) -> UIContent:
         """Generate the content for this user control."""
-        tab = get_app().tab
+        tab = get_app().pane
 
         # Build cache key from buffer texts and dimensions
         buffers: dict[Buffer, Window] = {}

@@ -22,7 +22,7 @@ from apptk.layout.margins import ScrollbarMargin
 from apptk.layout.scroll import ScrollingContainer
 
 from euporie.core.nbformat import new_code_cell
-from euporie.core.tabs.console import BaseConsole
+from euporie.core.panes.console import BaseConsole
 from euporie.core.widgets.cell_outputs import CellOutputArea
 from euporie.core.widgets.inputs import KernelInput, StdInput
 from euporie.core.widgets.layout import Frame

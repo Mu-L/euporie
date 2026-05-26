@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from typing import Any, Literal
 
     from euporie.core.kernel.base import BaseKernel, KernelInfo, MsgCallbacks
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.kernel import KernelPane
 
 KERNEL_REGISTRY = {
     "none": "euporie.core.kernel.base:NoKernel",
@@ -33,7 +33,7 @@ def list_kernels() -> Generator[KernelInfo]:
 
 def create_kernel(
     type_name: Literal["jupyter", "local"],
-    kernel_tab: KernelTab,
+    kernel_tab: KernelPane,
     default_callbacks: MsgCallbacks | None = None,
     allow_stdin: bool = False,
     **kwargs: Any,

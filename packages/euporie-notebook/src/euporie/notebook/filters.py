@@ -9,17 +9,17 @@ from apptk.filters import Condition
 @Condition
 def notebook_has_focus() -> bool:
     """Determine if there is a currently focused notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    return isinstance(get_app().tab, Notebook)
+    return isinstance(get_app().pane, Notebook)
 
 
 @Condition
 def deleted_cells() -> bool:
     """Determine if there ares cell in the undo buffer."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    nb = get_app().tab
+    nb = get_app().pane
     if isinstance(nb, Notebook):
         return bool(nb.undo_buffer)
     return False
@@ -28,9 +28,9 @@ def deleted_cells() -> bool:
 @Condition
 def code_cell_selected() -> bool:
     """Determine if a code cell is selected."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    nb = get_app().tab
+    nb = get_app().pane
     if isinstance(nb, Notebook):
         for cell in nb.cells:
             if cell.cell_type == "code":
@@ -41,9 +41,9 @@ def code_cell_selected() -> bool:
 @Condition
 def cell_has_focus() -> bool:
     """Determine if there is a currently focused cell."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    nb = get_app().tab
+    nb = get_app().pane
     if isinstance(nb, Notebook):
         return nb.cell is not None
     return False
@@ -52,9 +52,9 @@ def cell_has_focus() -> bool:
 @Condition
 def in_edit_mode() -> bool:
     """Determine if there is a currently focused notebook."""
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
-    nb = get_app().tab
+    nb = get_app().pane
     if isinstance(nb, Notebook):
         return nb.edit_mode
     return False

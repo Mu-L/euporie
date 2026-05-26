@@ -3,22 +3,6 @@
 from __future__ import annotations
 
 from euporie.core.config._setting import Setting
-from euporie.notebook.enums import TabMode
-
-tab_mode = Setting(
-    name="tab_mode",
-    flags=["--tab-mode"],
-    type_=str,
-    choices=[mode.value for mode in TabMode],
-    default="stack",
-    help_="The method used to display multiple tabs",
-    description="""
-        Determines how multiple tabs are displayed when more than one tab is open.
-        * ``stack`` displays one tab at a time with a tab-bar
-        * ``tile_horizontally`` displays tabs side-by-side
-        * ``tile_vertically`` displays tabs one-atop-the-next
-    """,
-)
 
 always_show_tab_bar = Setting(
     name="always_show_tab_bar",

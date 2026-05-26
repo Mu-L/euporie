@@ -25,7 +25,7 @@ from apptk.layout.print import PrintingContainer
 
 from euporie.core.format import LspFormatter
 from euporie.core.nbformat import new_code_cell, new_output
-from euporie.core.tabs.console import BaseConsole
+from euporie.core.panes.console import BaseConsole
 from euporie.core.widgets.cell_outputs import CellOutputArea
 from euporie.core.widgets.inputs import KernelInput, StdInput
 
@@ -506,7 +506,7 @@ class Console(BaseConsole):
 
     def save(self, path: Path | None = None, cb: Callable | None = None) -> None:
         """Save the console as a notebook."""
-        from euporie.core.tabs.notebook import BaseNotebook
+        from euporie.core.panes.notebook import BaseNotebook
 
         if path is not None:
             BaseNotebook.save(cast("BaseNotebook", self), path)

@@ -61,8 +61,8 @@ if TYPE_CHECKING:
 
     from euporie.core.app.app import BaseApp
     from euporie.core.kernel.base import KernelInfo
-    from euporie.core.tabs.base import Tab
-    from euporie.core.tabs.kernel import KernelTab
+    from euporie.core.panes.base import Pane
+    from euporie.core.panes.kernel import KernelPane
 
 log = logging.getLogger(__name__)
 
@@ -278,7 +278,7 @@ class Dialog(Float, metaclass=ABCMeta):
             try:
                 self.app.layout.focus(self.last_focused)
             except ValueError:
-                if tab := self.app.tab:
+                if tab := self.app.pane:
                     tab.focus()
                 else:
                     self.app.layout.focus_next()
@@ -381,7 +381,7 @@ class FileDialog(Dialog, metaclass=ABCMeta):
     def load(
         self,
         text: str = "",
-        tab: Tab | None = None,
+        tab: Pane | None = None,
         error: str = "",
         cb: Callable | None = None,
     ) -> None:
@@ -400,7 +400,7 @@ class FileDialog(Dialog, metaclass=ABCMeta):
         self.to_focus = self.filepath
 
     def validate(
-        self, buffer: Buffer, tab: Tab | None, cb: Callable | None = None
+        self, buffer: Buffer, tab: Pane | None, cb: Callable | None = None
     ) -> None:
         """Validate the input."""
         self.hide()
@@ -442,7 +442,7 @@ class OpenFileDialog(FileDialog):
     def load(
         self,
         text: str = "",
-        tab: Tab | None = None,
+        tab: Pane | None = None,
         error: str = "",
         cb: Callable | None = None,
     ) -> None:
@@ -452,7 +452,7 @@ class OpenFileDialog(FileDialog):
         self.tab_dd.labels = []
 
     def validate(
-        self, buffer: Buffer, tab: Tab | None, cb: Callable | None = None
+        self, buffer: Buffer, tab: Pane | None, cb: Callable | None = None
     ) -> None:
         """Validate the the file to open exists."""
         from apptk.path import parse_path
@@ -491,7 +491,7 @@ class SaveAsDialog(FileDialog):
     title = "Select a Path to Save"
 
     def validate(
-        self, buffer: Buffer, tab: Tab | None, cb: Callable | None = None
+        self, buffer: Buffer, tab: Pane | None, cb: Callable | None = None
     ) -> None:
         """Validate the the file to open exists."""
         from apptk.path import parse_path
@@ -544,7 +544,7 @@ class SelectKernelDialog(Dialog):
 
     title = "Select Kernel"
 
-    def load(self, tab: KernelTab | None = None, message: str = "") -> None:
+    def load(self, tab: KernelPane | None = None, message: str = "") -> None:
         """Load dialog body & buttons."""
         from euporie.core.kernel import list_kernels
         from euporie.core.widgets.layout import TabbedSplit
@@ -731,10 +731,10 @@ class UnsavedDialog(Dialog):
     title = "Unsaved Changes"
 
     def load(
-        self, tab: Tab | None = None, cb: Callable[[], None] | None = None
+        self, tab: Pane | None = None, cb: Callable[[], None] | None = None
     ) -> None:
         """Load the dialog body."""
-        tab = tab or self.app.tab
+        tab = tab or self.app.pane
         assert tab is not None
 
         self.body = Window(
@@ -753,11 +753,11 @@ class UnsavedDialog(Dialog):
             tab.save(cb=partial(tab.close, cb))
 
         def no_cb() -> None:
-            from euporie.core.tabs.base import Tab
+            from euporie.core.panes.base import Pane
 
             assert tab is not None
             self.hide()
-            Tab.close(tab, cb)
+            Pane.close(tab, cb)
 
         self.buttons = {
             "Yes": yes_cb,

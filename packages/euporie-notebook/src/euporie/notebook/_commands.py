@@ -8,7 +8,7 @@ from apptk.filters.environment import have_modules
 def _new_notebook() -> None:
     """Create a new notebook file."""
     from euporie.notebook.current import get_app
-    from euporie.notebook.tabs.notebook import Notebook
+    from euporie.notebook.panes.notebook import Notebook
 
     app = get_app()
     app.add_tab(tab := Notebook(app, None))
@@ -19,7 +19,7 @@ def _new_notebook() -> None:
 def _new_console() -> None:
     """Create a console tab."""
     from euporie.notebook.current import get_app
-    from euporie.notebook.tabs.console import Console
+    from euporie.notebook.panes.console import Console
 
     app = get_app()
     app.add_tab(tab := Console(app, None))
@@ -30,10 +30,10 @@ def _new_console() -> None:
 def _new_text_file() -> None:
     """Create a text file."""
     from euporie.notebook.current import get_app
-    from euporie.notebook.tabs.edit import EditorTab
+    from euporie.notebook.panes.edit import EditorPane
 
     app = get_app()
-    app.add_tab(tab := EditorTab(app, None))
+    app.add_tab(tab := EditorPane(app, None))
     tab.focus()
 
 
@@ -50,10 +50,10 @@ have_ptterm = have_modules("ptterm")
 def _new_terminal() -> None:
     """Create a text file."""
     from euporie.notebook.current import get_app
-    from euporie.notebook.tabs.terminal import TerminalTab
+    from euporie.notebook.panes.terminal import TerminalPane
 
     app = get_app()
-    app.add_tab(tab := TerminalTab(app, None))
+    app.add_tab(tab := TerminalPane(app, None))
     tab.focus()
 
 
@@ -80,12 +80,12 @@ def _open_config_file() -> None:
     from upath import UPath
 
     from euporie.notebook.current import get_app
-    from euporie.notebook.tabs.edit import EditorTab
+    from euporie.notebook.panes.edit import EditorPane
 
     app = get_app()
     config_path = UPath(app.config._config_path)
     # Create the config file if it doesn't exist
     if not config_path.exists():
         config_path.write_text("{}\n")
-    app.add_tab(tab := EditorTab(app, config_path))
+    app.add_tab(tab := EditorPane(app, config_path))
     tab.focus()

@@ -17,8 +17,8 @@ from euporie.core.kernel.base import MsgCallbacks
 from euporie.core.nbformat import from_dict, new_code_cell, new_notebook
 from euporie.core.nbformat import read as read_nb
 from euporie.core.nbformat import write as write_nb
+from euporie.core.panes.kernel import KernelPane
 from euporie.core.path import safe_write
-from euporie.core.tabs.kernel import KernelTab
 from euporie.core.widgets.cell import Cell, get_cell_id
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class BaseNotebook(KernelTab, metaclass=ABCMeta):
+class BaseNotebook(KernelPane, metaclass=ABCMeta):
     """The main notebook container class."""
 
     allow_stdin = False
@@ -98,7 +98,7 @@ class BaseNotebook(KernelTab, metaclass=ABCMeta):
         self._rendered_cells = {}
         self.refresh()
 
-    # KernelTab stuff
+    # KernelPane stuff
 
     def init_kernel(
         self,

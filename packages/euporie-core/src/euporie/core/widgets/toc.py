@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from apptk.mouse_events import MouseEvent
     from apptk.utils import Event
 
-    from euporie.core.tabs.base import Tab
+    from euporie.core.panes.base import Pane
 
 
 log = logging.getLogger(__name__)
@@ -168,7 +168,7 @@ class TocControl(UIControl):
             )
         return entries
 
-    def _build_toc(self, tab: Tab) -> tuple[TocEntry, ...]:
+    def _build_toc(self, tab: Pane) -> tuple[TocEntry, ...]:
         entries = []
         try:
             windows = tab.__pt_searchables__()
@@ -234,7 +234,7 @@ class TocControl(UIControl):
 
     def create_content(self, width: int, height: int) -> UIContent:
         """Generate the content for this user control."""
-        tab = get_app().tab
+        tab = get_app().pane
         if tab is None:
             entries: tuple[TocEntry, ...] = ()
         else:

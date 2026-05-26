@@ -82,8 +82,8 @@ if TYPE_CHECKING:
     from euporie.core.config._setting import Setting
     from euporie.core.format import CliFormatter
     from euporie.core.lsp import LspClient
-    from euporie.core.tabs import TabRegistryEntry
-    from euporie.core.tabs.base import Tab
+    from euporie.core.panes import PaneRegistryEntry
+    from euporie.core.panes.base import Pane
     from euporie.core.widgets.dialog import Dialog
     from euporie.core.widgets.pager import Pager
 
@@ -267,7 +267,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
             preferred_graphics=lambda: self.config.graphics,
         )
         # Contains the opened tab containers
-        self.tabs: list[Tab] = []
+        self.panes: list[Pane] = []
         self.on_tabs_change = Event(self)
         # Holds the optional toolbars
         self.search_bar: SearchBar | None = None
@@ -585,13 +585,13 @@ class BaseApp(ConfigurableApp, Application, ABC):
         )
 
     @property
-    def tab_registry(self) -> list[TabRegistryEntry]:
+    def pane_registry(self) -> list[PaneRegistryEntry]:
         """Return the tab registry."""
-        from euporie.core.tabs import _TAB_REGISTRY
+        from euporie.core.panes import _PANE_REGISTRY
 
-        return _TAB_REGISTRY
+        return _PANE_REGISTRY
 
-    def get_file_tabs(self, path: Path) -> list[TabRegistryEntry]:
+    def get_file_tabs(self, path: Path) -> list[PaneRegistryEntry]:
         """Return the tab to use for a file path."""
         from apptk.convert.mime import get_mime
 
@@ -599,18 +599,18 @@ class BaseApp(ConfigurableApp, Application, ABC):
         log.debug("File %s has mime type: %s", path, path_mime)
 
         # Use a set to automatically handle duplicates
-        tab_options: set[TabRegistryEntry] = set()
-        for entry in self.tab_registry:
+        tab_options: set[PaneRegistryEntry] = set()
+        for entry in self.pane_registry:
             for mime_type in entry.mime_types:
                 if PurePath(path_mime).match(mime_type):
                     tab_options.add(entry)
             if path.suffix in entry.file_extensions:
                 tab_options.add(entry)
 
-        # Sort by weight (TabRegistryEntry.__lt__ handles this)
+        # Sort by weight (PaneRegistryEntry.__lt__ handles this)
         return sorted(tab_options, reverse=True)
 
-    def get_file_tab(self, path: Path) -> type[Tab] | None:
+    def get_file_tab(self, path: Path) -> type[Pane] | None:
         """Return the tab to use for a file path."""
         if tabs := self.get_file_tabs(path):
             return tabs[0].tab_class
@@ -868,7 +868,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
             log.exception("Error shutting down LSP clients")
 
     def open_file(
-        self, path: Path, read_only: bool = False, tab_class: type[Tab] | None = None
+        self, path: Path, read_only: bool = False, tab_class: type[Pane] | None = None
     ) -> None:
         """Create a tab for a file.
 
@@ -882,7 +882,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
 
         ppath = parse_path(path, resolve=True)
         log.info("Opening file %s", path)
-        for tab in self.tabs:
+        for tab in self.panes:
             if ppath == getattr(tab, "path", "") and (
                 tab_class is None or isinstance(tab, tab_class)
             ):
@@ -900,7 +900,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
                 # Ensure the opened tab is focused at app start
                 self.focused_element = tab
                 # Ensure the newly opened tab is selected
-                self.tab_idx = len(self.tabs) - 1
+                self.tab_idx = len(self.panes) - 1
                 # Save 20 most recent files, deduplicating while keeping order
                 if ppath.exists():
                     self.state.recent_files = list(
@@ -913,17 +913,17 @@ class BaseApp(ConfigurableApp, Application, ABC):
             self.open_file(file)
 
     @property
-    def tab(self) -> Tab | None:
+    def pane(self) -> Pane | None:
         """Return the currently selected tab container object."""
-        if self.tabs:
+        if self.panes:
             # Detect if focused tab has changed
             # Find index of selected child
-            for i, tab in enumerate(self.tabs):
+            for i, tab in enumerate(self.panes):
                 if self.render_counter > 0 and self.layout.has_focus(tab):
                     self._tab_idx = i
                     break
-            self._tab_idx = max(0, min(self._tab_idx, len(self.tabs) - 1))
-            return self.tabs[self._tab_idx]
+            self._tab_idx = max(0, min(self._tab_idx, len(self.panes) - 1))
+            return self.panes[self._tab_idx]
         else:
             return None
 
@@ -935,19 +935,19 @@ class BaseApp(ConfigurableApp, Application, ABC):
     @tab_idx.setter
     def tab_idx(self, value: int) -> None:
         """Set the current tab by index."""
-        self._tab_idx = value % (len(self.tabs) or 1)
-        if self.tabs:
-            container = to_container(self.tabs[self._tab_idx])
+        self._tab_idx = value % (len(self.panes) or 1)
+        if self.panes:
+            container = to_container(self.panes[self._tab_idx])
             try:
                 self.layout.focus(container)
             except ValueError:
                 log.exception("Cannot focus tab")
 
-    def focus_tab(self, tab: Tab) -> None:
+    def focus_tab(self, tab: Pane) -> None:
         """Make a tab visible and focuses it."""
-        self.tab_idx = self.tabs.index(tab)
+        self.tab_idx = self.panes.index(tab)
 
-    def cleanup_closed_tab(self, tab: Tab) -> None:
+    def cleanup_closed_tab(self, tab: Pane) -> None:
         """Remove a tab container from the current instance of the app.
 
         Args:
@@ -955,11 +955,11 @@ class BaseApp(ConfigurableApp, Application, ABC):
 
         """
         # Remove tab
-        if tab in self.tabs:
-            self.tabs.remove(tab)
+        if tab in self.panes:
+            self.panes.remove(tab)
             self.on_tabs_change()
         # Focus the next active tab if one exists
-        if next_tab := self.tab:
+        if next_tab := self.pane:
             next_tab.focus()
         # If no tab is open, ensure something is focused
         else:
@@ -968,12 +968,12 @@ class BaseApp(ConfigurableApp, Application, ABC):
             except ValueError:
                 pass
 
-    def add_tab(self, tab: Tab) -> None:
+    def add_tab(self, tab: Pane) -> None:
         """Add a tab to the current tabs list."""
-        self.tabs.append(tab)
+        self.panes.append(tab)
         self.on_tabs_change()
 
-    def close_tab(self, tab: Tab | None = None) -> None:
+    def close_tab(self, tab: Pane | None = None) -> None:
         """Close a notebook tab.
 
         Args:
@@ -982,7 +982,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
 
         """
         if tab is None:
-            tab = self.tab
+            tab = self.pane
         if tab is not None:
             tab.close(cb=partial(self.cleanup_closed_tab, tab))
         self.invalidate()
@@ -1036,7 +1036,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
 
     def refresh(self) -> None:
         """Reset all tabs."""
-        for tab in self.tabs:
+        for tab in self.panes:
             to_container(tab).reset()
 
     def draw(self, render_as_done: bool = True) -> None:
