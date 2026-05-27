@@ -371,8 +371,8 @@ class TabModel(LayoutIpyWidgetComm):
         children = self.data["state"]["children"]
         container = TabbedSplit(
             children=self.render_children(children, parent),
-            titles=list(self.data["state"].get("_titles", {}).values())
-            or [""] * len(children),
+            titles=(self.data["state"].get("titles", []))
+            or [str(i + 1) for i in range(len(children))],
             active=self.data["state"].get("selected_index"),
             style=self.box_style,
             on_change=self.update_index,
@@ -382,18 +382,15 @@ class TabModel(LayoutIpyWidgetComm):
             """Set the children of the tab view when they change."""
             container.children = self.render_children(models, parent)
 
-        def set_titles(new: dict[int, str]) -> None:
+        def set_titles(new: list[str]) -> None:
             """Set the titles on the tabs when they change."""
-            titles = container.titles
-            for index, value in new.items():
-                titles[int(index)] = value
-            container.titles = titles
+            container.titles = new
 
         return CommView(
             container,
             {
                 "children": set_children,
-                "_titles": set_titles,
+                "titles": set_titles,
                 "selected_index": partial(setattr, container, "active"),
             },
         )
