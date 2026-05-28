@@ -22,7 +22,13 @@ from apptk.filters import Condition
 from apptk.filters.app import has_toolbar
 from apptk.key_binding.key_bindings import KeyBindings
 from apptk.key_binding.key_processor import KeyProcessor
-from apptk.layout.containers import Float, FloatContainer, Window, to_container
+from apptk.layout.containers import (
+    Float,
+    FloatContainer,
+    Window,
+    to_container,
+    to_window,
+)
 from apptk.layout.layout import Layout
 from apptk.output.vt100 import (
     ANSI_COLORS_TO_RGB,
@@ -937,11 +943,16 @@ class BaseApp(ConfigurableApp, Application, ABC):
         """Set the current tab by index."""
         self._tab_idx = value % (len(self.panes) or 1)
         if self.panes:
-            container = to_container(self.panes[self._tab_idx])
+            pane = self.panes[self._tab_idx]
             try:
-                self.layout.focus(container)
+                window = to_window(pane)
             except ValueError:
-                log.exception("Cannot focus tab")
+                try:
+                    self.layout.focus(pane)
+                except ValueError:
+                    log.exception("Cannot focus tab")
+            else:
+                self.layout.current_window = window
 
     def focus_tab(self, tab: Pane) -> None:
         """Make a tab visible and focuses it."""

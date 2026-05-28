@@ -165,7 +165,7 @@ class DockingGroup:
         return panel
 
     def insert_panel(self, panel: Panel, index: int | None = None) -> None:
-        """Insert a panel at the given index.
+        """Isert a panel at the given index.
 
         Args:
             panel: The panel to insert.
@@ -173,12 +173,9 @@ class DockingGroup:
         """
         if index is None:
             self.panels.append(panel)
-            target = len(self.panels) - 1
         else:
             self.panels.insert(index, panel)
-            target = index
         self._built_container = None
-        self._activate_tab(target)
 
 
 class DockingNode:
@@ -581,28 +578,6 @@ class DockingSplit:
         """
         self._active_group = group
 
-    def focus_panel(self, content: AnyContainer) -> None:
-        """Ensure the docking split shows the focused panel as active.
-
-        Args:
-            content: The content that should be shown as active.
-        """
-
-        def walk(node: DockingGroup | DockingNode) -> bool:
-            if isinstance(node, DockingGroup):
-                for i, panel in enumerate(node.panels):
-                    if panel.content is content:
-                        if node._active != i:
-                            node._active = i
-                        self._set_active_group(node)
-                        return True
-                return False
-            elif isinstance(node, DockingNode):
-                return walk(node.first) or walk(node.second)
-            return False
-
-        walk(self.root)
-
     def get_group_for_content(self, content: AnyContainer) -> DockingGroup | None:
         """Return the group containing the given content.
 
@@ -894,6 +869,31 @@ class DockingSplit:
         remove_from(self.root)
         self.cleanup_empty_groups()
         self.panels = self._collect_panels()
+
+    def sync_active_panel(self, content: AnyContainer) -> None:
+        """Sync the active group highlight without firing activation callbacks.
+
+        This is used during rendering to update which tab appears highlighted
+        based on the current focus, without triggering side effects like
+        re-focusing or re-activating panels.
+
+        Args:
+            content: The content that should be shown as active.
+        """
+
+        def walk(node: DockingGroup | DockingNode) -> bool:
+            if isinstance(node, DockingGroup):
+                for i, panel in enumerate(node.panels):
+                    if panel.content is content:
+                        node._active = i
+                        self._set_active_group(node)
+                        return True
+                return False
+            elif isinstance(node, DockingNode):
+                return walk(node.first) or walk(node.second)
+            return False
+
+        walk(self.root)
 
     def __pt_container__(self) -> Container:
         """Return the container."""

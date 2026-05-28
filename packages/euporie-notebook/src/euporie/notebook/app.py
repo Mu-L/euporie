@@ -19,11 +19,10 @@ from apptk.layout.containers import (
     VSplit,
     Window,
     WindowAlign,
-    to_container,
 )
 from apptk.layout.controls import FormattedTextControl
 from apptk.layout.dimension import Dimension
-from apptk.widgets.docking import DockingGroup, DockingSplit
+from apptk.widgets.docking import DockingSplit
 from apptk.widgets.menus import MenuContainer, MenuItem
 from apptk.widgets.panel import Panel
 from apptk.widgets.toolbars import (
@@ -214,18 +213,12 @@ class NotebookApp(BaseApp):
                 zone_highlight=self.color_palette.hl,
                 hide_single_tab=~self.config.filters.always_show_tab_bar,
             )
-            # Set active panel to match _tab_idx
-            if isinstance(self.docking_split.root, DockingGroup):
-                self.docking_split.root._active = min(
-                    self._tab_idx, max(0, len(self.panes) - 1)
-                )
-                self.docking_split.focused_group = self.docking_split.root
 
         # Sync the active group highlight on every render so it's never stale
         if self.render_counter > 0 and self.panes:
             for pane in self.panes:
                 if self.layout.has_focus(pane):
-                    self._sync_docking_active(pane)
+                    self.docking_split.sync_active_panel(pane)
                     break
 
         return self.docking_split
@@ -240,11 +233,11 @@ class NotebookApp(BaseApp):
             A Panel for the pane.
         """
         return Panel(
-            title=lambda pane=pane: pane.title,  # type: ignore[misc]
+            title=lambda pane=pane: pane.title,
             content=pane,
             closeable=True,
-            on_activate=lambda sender, pane=pane: self._on_panel_activate(pane),  # type: ignore[misc]
-            on_close=lambda sender, pane=pane: self.close_tab(pane),  # type: ignore[misc]
+            on_activate=lambda sender, pane=pane: self._on_panel_activate(pane),
+            on_close=lambda sender, pane=pane: self.close_tab(pane),
         )
 
     def _on_panel_activate(self, pane: Pane) -> None:
@@ -254,15 +247,7 @@ class NotebookApp(BaseApp):
             pane: The tab that was activated.
         """
         if pane in self.panes:
-            self._tab_idx = self.panes.index(pane)
-            if self.docking_split is not None:
-                group = self.docking_split.get_group_for_content(pane)
-                if group is not None:
-                    self.docking_split.focused_group = group
-            try:
-                self.layout.focus(to_container(pane))
-            except ValueError:
-                pass
+            self.tab_idx = self.panes.index(pane)
 
     def _on_tabs_change(self, app: _BaseApp | None = None) -> None:
         """Handle tabs list changes."""
@@ -289,16 +274,7 @@ class NotebookApp(BaseApp):
         if panel_to_remove is not None:
             self.docking_split.remove_panel(panel_to_remove)
 
-    def _sync_docking_active(self, pane: Pane) -> None:
-        """Ensure the docking split shows the focused Pane as active.
-
-        Args:
-            pane: The pane that should be shown as active.
-        """
-        if self.docking_split is not None:
-            self.docking_split.focus_panel(pane)
-
-    def add_tab(self, pane: pane) -> None:
+    def add_tab(self, pane: Pane) -> None:
         """Add a pane to the app and docking split.
 
         Args:
