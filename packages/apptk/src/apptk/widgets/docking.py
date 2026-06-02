@@ -713,60 +713,40 @@ class DockingSplit:
 
         # Clean up empty groups
         self.cleanup_empty_groups()
-        self.panels = self._collect_panels()
 
     def _replace_node(
         self,
         old: DockingGroup | DockingNode,
         new: DockingGroup | DockingNode,
+        parent: DockingGroup | DockingNode | None = None,
     ) -> None:
         """Replace a node in the tree with a new node.
 
         Args:
             old: The node to replace.
             new: The replacement node.
-        """
-        if self.root is old:
-            self.root = new
-            return
-
-        # Search tree for parent of old
-        self._replace_in_subtree(self.root, old, new)
-
-    def _replace_in_subtree(
-        self,
-        parent: DockingGroup | DockingNode,
-        old: DockingGroup | DockingNode,
-        new: DockingGroup | DockingNode,
-    ) -> bool:
-        """Recursively search and replace a node in the tree.
-
-        Args:
             parent: Current node being searched.
-            old: The node to find and replace.
-            new: The replacement node.
-
-        Returns:
-            True if the replacement was made.
         """
-        if not isinstance(parent, DockingNode):
-            return False
+        if parent is None:
+            if self.root is old:
+                self.root = new
+                return
+            parent = self.root
 
-        if parent.first is old:
-            parent.first = new
-            return True
-        elif parent.second is old:
-            parent.second = new
-            return True
-
-        return self._replace_in_subtree(
-            parent.first, old, new
-        ) or self._replace_in_subtree(parent.second, old, new)
+        if isinstance(parent, DockingNode):
+            if parent.first is old:
+                parent.first = new
+            elif parent.second is old:
+                parent.second = new
+            else:
+                self._replace_node(old, new, parent.first)
+                self._replace_node(old, new, parent.second)
 
     def cleanup_empty_groups(self) -> None:
         """Remove empty groups from the tree and collapse unnecessary splits."""
         self.root = self._cleanup_node(self.root)
         self.panels = self._collect_panels()
+        get_app().invalidate()
 
     def _cleanup_node(
         self, node: DockingGroup | DockingNode
@@ -810,8 +790,6 @@ class DockingSplit:
                 return collect(node.first) + collect(node.second)
             return []
 
-        # Trigger a redraw in case the panels have changed
-        get_app().invalidate()
         return collect(self.root)
 
     def _find_first_group(self) -> DockingGroup | None:
@@ -845,6 +823,7 @@ class DockingSplit:
             self.root = group
         group.insert_panel(panel)
         self.panels = self._collect_panels()
+        get_app().invalidate()
 
     def remove_panel(self, panel: Panel) -> None:
         """Remove a panel from the docking tree and sync the panels list.
@@ -852,23 +831,11 @@ class DockingSplit:
         Args:
             panel: The panel to remove.
         """
-
-        def remove_from(node: DockingGroup | DockingNode) -> bool:
-            if isinstance(node, DockingGroup):
-                for i, p in enumerate(node.panels):
-                    if p is panel:
-                        node.panels.pop(i)
-                        node._clamp_active()
-                        node._built_container = None
-                        return True
-                return False
-            elif isinstance(node, DockingNode):
-                return remove_from(node.first) or remove_from(node.second)
-            return False
-
-        remove_from(self.root)
-        self.cleanup_empty_groups()
-        self.panels = self._collect_panels()
+        if (
+            group := self.get_group_for_content(panel.content)
+        ) and panel in group.panels:
+            group.remove_panel(group.panels.index(panel))
+            self.cleanup_empty_groups()
 
     def sync_active_panel(self, content: AnyContainer) -> None:
         """Sync the active group highlight without firing activation callbacks.
