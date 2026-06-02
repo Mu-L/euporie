@@ -183,7 +183,7 @@ class NotebookApp(BaseApp):
         """Format the pane's title for display in the top right of the app."""
         if self.panes:
             # Get tab without re-focusing it
-            tab = self.panes[self._tab_idx]
+            tab = self.pane
             title = truncate(to_formatted_text(tab.title, style="bold"), 30)
             return [("", " "), *title, ("", " ")]
         else:

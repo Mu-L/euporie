@@ -473,6 +473,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
         # We delay this until we have terminal responses to allow terminal graphics
         # support to be detected first
         self.layout = Layout(self.load_container(), self.focused_element)
+        self.layout.on_focus_changed += self._on_focus_changed
         # Open any files we need to
         self.open_files()
         # Start polling terminal style if configured
@@ -922,12 +923,6 @@ class BaseApp(ConfigurableApp, Application, ABC):
     def pane(self) -> Pane | None:
         """Return the currently selected tab container object."""
         if self.panes:
-            # Detect if focused tab has changed
-            # Find index of selected child
-            for i, tab in enumerate(self.panes):
-                if self.render_counter > 0 and self.layout.has_focus(tab):
-                    self._tab_idx = i
-                    break
             self._tab_idx = max(0, min(self._tab_idx, len(self.panes) - 1))
             return self.panes[self._tab_idx]
         else:
@@ -1064,6 +1059,16 @@ class BaseApp(ConfigurableApp, Application, ABC):
         self._redrawing = False
         # Ensure the renderer knows where the cursor is
         self._request_absolute_cursor_position()
+
+    def _on_focus_changed(self, layout: Layout) -> None:
+        """Handle focus changes to update the active tab index."""
+        if self.panes:
+            for i, tab in enumerate(self.panes):
+                if self.layout.has_focus(tab):
+                    if self._tab_idx != i:
+                        self._tab_idx = i
+                        self.invalidate()
+                    break
 
     def _handle_exception(
         self, loop: AbstractEventLoop, context: dict[str, Any]
