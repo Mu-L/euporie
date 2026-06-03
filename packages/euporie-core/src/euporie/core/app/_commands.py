@@ -55,13 +55,13 @@ def _close_tab() -> None:
 @add_cmd(keys=["c-pagedown"], aliases=["bn"], filter=pane_has_focus)
 def _next_tab() -> None:
     """Switch to the next tab."""
-    get_app().pane_idx += 1
+    get_app().tab_idx += 1
 
 
 @add_cmd(keys=["c-pageup"], aliases=["bp"], filter=pane_has_focus)
 def _previous_tab() -> None:
     """Switch to the previous tab."""
-    get_app().pane_idx -= 1
+    get_app().tab_idx -= 1
 
 
 @add_cmd(keys=["tab"], filter=~buffer_has_focus)
