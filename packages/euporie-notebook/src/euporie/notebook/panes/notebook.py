@@ -142,6 +142,8 @@ class Notebook(BaseNotebook):
     @property
     def selected_indices(self) -> list[int]:
         """Return a list of the currently selected cell indices."""
+        if not hasattr(self, "page"):
+            return []
         return self.page.selected_indices
 
     def kernel_started(self, result: dict[str, Any] | None = None) -> None:
