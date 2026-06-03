@@ -212,14 +212,8 @@ class NotebookApp(BaseApp):
                 zone_color=self.color_palette.bg,
                 zone_highlight=self.color_palette.hl,
                 hide_single_tab=~self.config.filters.always_show_tab_bar,
+                activate_on_focus=True,
             )
-
-        # Sync the active group highlight on every render so it's never stale
-        if self.render_counter > 0 and self.panes:
-            for pane in self.panes:
-                if self.layout.has_focus(pane):
-                    self.docking_split.sync_active_panel(pane)
-                    break
 
         return self.docking_split
 
@@ -236,18 +230,8 @@ class NotebookApp(BaseApp):
             title=lambda pane=pane: pane.title,
             content=pane,
             closeable=True,
-            on_activate=lambda sender, pane=pane: self._on_panel_activate(pane),
             on_close=lambda sender, pane=pane: self.close_tab(pane),
         )
-
-    def _on_panel_activate(self, pane: Pane) -> None:
-        """Handle a panel being activated in the docking split.
-
-        Args:
-            pane: The tab that was activated.
-        """
-        if pane in self.panes:
-            self.tab_idx = self.panes.index(pane)
 
     def _on_tabs_change(self, app: _BaseApp | None = None) -> None:
         """Handle tabs list changes."""

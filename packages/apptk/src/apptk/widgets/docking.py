@@ -26,7 +26,7 @@ from apptk.widgets.panel import Panel
 from apptk.widgets.tab_bar import TabBarControl
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Iterator, Sequence
 
     from apptk.border import GridStyle
     from apptk.color import Color
@@ -72,6 +72,7 @@ class DockingGroup:
         self._active = min(active, max(0, len(panels) - 1))
         self.docking_split = docking_split
         self._built_container: AnyContainer | None = None
+        self._drop_zones: list[DropZone] = []
 
     @property
     def active(self) -> int:
@@ -125,6 +126,14 @@ class DockingGroup:
         if 0 <= index < len(self.panels):
             panel = self.panels[index]
             panel.on_activate()
+            # Move focus to the panel's content so clicking a tab focuses it.
+            # This is required when activate_on_focus is enabled, where the
+            # highlight follows focus rather than activation.
+            try:
+                get_app().layout.focus(panel.content)
+            except ValueError:
+                # Content may not be focusable or not currently in the layout
+                pass
         # Notify parent that this group is now the active one
         if self.docking_split:
             self.docking_split._set_active_group(self)
@@ -165,7 +174,7 @@ class DockingGroup:
         return panel
 
     def insert_panel(self, panel: Panel, index: int | None = None) -> None:
-        """Isert a panel at the given index.
+        """Insert a panel at the given index.
 
         Args:
             panel: The panel to insert.
@@ -255,7 +264,7 @@ class DockingTabBarControl(TabBarControl):
         # Parent handled it (e.g., close button click) — cancel any drag
         if result is None and self.docking_split.drag_state is not None:
             self.docking_split.drag_state = None
-            self.docking_split.set_drop_zones()
+            self.docking_split.show_drop_zones()
 
         row = mouse_event.position.y
         col = mouse_event.position.x
@@ -272,14 +281,20 @@ class DockingTabBarControl(TabBarControl):
                 mouse_event.event_type == MouseEventType.MOUSE_MOVE
                 and self.docking_split.drag_state is not None
             ):
-                # Update drag position
-                self.docking_split.update_drag(mouse_event)
+                # The mouse is over a tab bar, not a drop zone, so clear any
+                # pending target but keep the drop zones visible
+                self.docking_split.drag_state.target_group = None
+                self.docking_split.show_drop_zones()
                 result = None
 
         if (
             mouse_event.event_type == MouseEventType.MOUSE_UP
             and self.docking_split.drag_state is not None
         ):
+            # Fallback for releasing the mouse over a tab bar rather than a drop
+            # zone. DropZone.mouse_handler also calls end_drag() on MOUSE_UP, but
+            # end_drag() guards on drag_state being None, so the dual handling is
+            # safe.
             self.docking_split.end_drag()
             result = None
 
@@ -308,14 +323,13 @@ class DropZone:
             content=self.shadow,
             handler=self.mouse_handler,
         )
-        self.docking_split._drop_zones.append(self)
 
     def hide(self) -> None:
         """Restyle when the mouse exits."""
         self.shadow.amount = 0.0
 
     def show(self) -> None:
-        """Restyle when the mouse exits."""
+        """Restyle when the drop zone becomes available during a drag."""
         self.shadow.amount = 0.25
         self.shadow.color = self.color
 
@@ -336,7 +350,7 @@ class DropZone:
             return None
 
         if mouse_event.event_type == MouseEventType.MOUSE_MOVE:
-            self.docking_split.set_drop_zones(active=self)
+            self.docking_split.show_drop_zones(active=self)
             drag_state.target_group = self.group
             drag_state.position = self.position
             self.indicate()
@@ -346,6 +360,9 @@ class DropZone:
             mouse_event.event_type == MouseEventType.MOUSE_UP
             and mouse_event.button == MouseButton.LEFT
         ):
+            # Primary end-drag path when releasing over a drop zone.
+            # DockingTabBarControl.mouse_handler provides a fallback for releases
+            # outside any zone; end_drag() guards on drag_state so this is safe.
             drag_state.target_group = self.group
             drag_state.position = self.position
             self.docking_split.end_drag()
@@ -377,6 +394,8 @@ class DockingSplit:
         v_padding: Vertical padding between horizontal splits.
         v_padding_char: Character used for vertical padding.
         hide_single_tab: If True, hide the tab bar when a group has only one panel.
+        activate_on_focus: If True, automatically activate the group and panel
+            whose content currently has focus on each render.
     """
 
     def __init__(
@@ -393,6 +412,7 @@ class DockingSplit:
         zone_color: Color | str = "#000000",
         zone_highlight: Color | str = "#000000",
         hide_single_tab: FilterOrBool = False,
+        activate_on_focus: FilterOrBool = True,
     ) -> None:
         """Initialize the docking split."""
         self.style = style
@@ -406,6 +426,7 @@ class DockingSplit:
         self.zone_color = zone_color
         self.zone_highlight = zone_highlight
         self.hide_single_tab = to_filter(hide_single_tab)
+        self.activate_on_focus = to_filter(activate_on_focus)
         self.drag_state: DragState | None = None
         self._drop_zones: list[DropZone] = []
         self.panels: list[Panel] = list(panels)
@@ -431,7 +452,28 @@ class DockingSplit:
 
     def _build_layout(self) -> AnyContainer:
         """Build the layout from the docking tree."""
+        if self.activate_on_focus():
+            self._sync_focused_panel()
         return self._build_node(self.root)
+
+    def _sync_focused_panel(self) -> None:
+        """Activate the group and panel whose content currently has focus.
+
+        Walks the tree and, if a panel's content has focus, marks it as the
+        active panel of its group and sets that group as the active group.
+        This updates the highlight without firing activation callbacks.
+        """
+        layout = get_app().layout
+        for group in self._walk_groups():
+            for i, panel in enumerate(group.panels):
+                try:
+                    has_focus = layout.has_focus(panel.content)
+                except Exception:
+                    has_focus = False
+                if has_focus:
+                    group._active = i
+                    self._set_active_group(group)
+                    return
 
     def _build_node(self, node: DockingGroup | DockingNode) -> AnyContainer:
         """Recursively build the container layout from a tree node.
@@ -493,19 +535,16 @@ class DockingSplit:
                 width: AnyDimension = None,
                 height: AnyDimension = None,
             ) -> AnyContainer:
-                return HSplit(
-                    [
-                        DropZone(
-                            self,
-                            group,
-                            position,
-                            color=self.zone_color,
-                            highlight=self.zone_highlight,
-                        )
-                    ],
-                    width=width,
-                    height=height,
+                zone = DropZone(
+                    self,
+                    group,
+                    position,
+                    color=self.zone_color,
+                    highlight=self.zone_highlight,
                 )
+                self._drop_zones.append(zone)
+                group._drop_zones.append(zone)
+                return HSplit([zone], width=width, height=height)
 
             group._built_container = HSplit(
                 [
@@ -578,6 +617,24 @@ class DockingSplit:
         """
         self._active_group = group
 
+    def _walk_groups(
+        self, node: DockingGroup | DockingNode | None = None
+    ) -> Iterator[DockingGroup]:
+        """Yield all DockingGroups in tree order.
+
+        Args:
+            node: The node to start from. Defaults to the tree root.
+
+        Yields:
+            Each DockingGroup found during tree traversal.
+        """
+        node = node or self.root
+        if isinstance(node, DockingGroup):
+            yield node
+        else:
+            yield from self._walk_groups(node.first)
+            yield from self._walk_groups(node.second)
+
     def get_group_for_content(self, content: AnyContainer) -> DockingGroup | None:
         """Return the group containing the given content.
 
@@ -587,18 +644,10 @@ class DockingSplit:
         Returns:
             The DockingGroup containing the content, or None.
         """
-
-        def find_group(node: DockingGroup | DockingNode) -> DockingGroup | None:
-            if isinstance(node, DockingGroup):
-                for panel in node.panels:
-                    if panel.content is content:
-                        return node
-                return None
-            elif isinstance(node, DockingNode):
-                return find_group(node.first) or find_group(node.second)
-            return None
-
-        return find_group(self.root)
+        for group in self._walk_groups():
+            if any(panel.content is content for panel in group.panels):
+                return group
+        return None
 
     def start_drag(self, group: DockingGroup, tab_index: int) -> None:
         """Begin a drag operation.
@@ -610,50 +659,32 @@ class DockingSplit:
         if len(group.panels) > 0:
             self.drag_state = DragState(source_group=group, tab_index=tab_index)
 
-    def update_drag(self, mouse_event: MouseEvent) -> None:
-        """Update drag state based on mouse position.
+    def hide_drop_zones(self) -> None:
+        """Hide all drop zone shadows."""
+        for drop_zone in self._drop_zones:
+            drop_zone.hide()
 
-        Args:
-            mouse_event: The current mouse event.
-        """
-        if self.drag_state is None:
-            self.set_drop_zones(hide=True)
-            return
-
-        # Position detection is handled by DropZone based on where
-        # the mouse is within the target group's area. If the mouse event reaches
-        # here, it is no longer over a drop zone.
-        self.drag_state.target_group = None
-        self.set_drop_zones(hide=True)
-
-    def set_drop_zones(
-        self, active: DropZone | None = None, hide: bool = False
-    ) -> None:
-        """Reset inactive drop zone shadows.
+    def show_drop_zones(self, active: DropZone | None = None) -> None:
+        """Show drop zone shadows, highlighting the active one.
 
         Args:
             active: The drop zone that should remain highlighted.
-            hide: Whether to hide all drop zones
         """
-        if hide:
-            for drop_zone in self._drop_zones:
-                drop_zone.hide()
-        else:
-            for drop_zone in self._drop_zones:
-                if drop_zone is active:
-                    drop_zone.indicate()
-                else:
-                    drop_zone.show()
+        for drop_zone in self._drop_zones:
+            if drop_zone is active:
+                drop_zone.indicate()
+            else:
+                drop_zone.show()
 
     def end_drag(self) -> None:
         """Complete a drag operation, docking the panel."""
         if self.drag_state is None:
-            self.set_drop_zones(hide=True)
+            self.hide_drop_zones()
             return
 
         state = self.drag_state
         self.drag_state = None
-        self.set_drop_zones(hide=True)
+        self.hide_drop_zones()
 
         target_group = state.target_group
         if target_group is None:
@@ -742,6 +773,23 @@ class DockingSplit:
                 self._replace_node(old, new, parent.first)
                 self._replace_node(old, new, parent.second)
 
+    def _discard_group(self, group: DockingGroup) -> None:
+        """Release a group's resources so it can be garbage-collected.
+
+        Removes the group's drop zones from the split's tracking list and clears
+        the group's references to its zones and cached container, breaking any
+        cycles that would otherwise keep the group, its panels and zones alive.
+
+        Args:
+            group: The group being removed from the tree.
+        """
+        zones = set(group._drop_zones)
+        if zones:
+            self._drop_zones = [z for z in self._drop_zones if z not in zones]
+        group._drop_zones.clear()
+        group._built_container = None
+        group.docking_split = None
+
     def cleanup_empty_groups(self) -> None:
         """Remove empty groups from the tree and collapse unnecessary splits."""
         self.root = self._cleanup_node(self.root)
@@ -768,10 +816,12 @@ class DockingSplit:
 
         # If first child is empty group, return second
         if isinstance(node.first, DockingGroup) and not node.first.panels:
+            self._discard_group(node.first)
             return node.second
 
         # If second child is empty group, return first
         if isinstance(node.second, DockingGroup) and not node.second.panels:
+            self._discard_group(node.second)
             return node.first
 
         return node
@@ -782,15 +832,7 @@ class DockingSplit:
         Returns:
             A flat list of all panels in tree traversal order.
         """
-
-        def collect(node: DockingGroup | DockingNode) -> list[Panel]:
-            if isinstance(node, DockingGroup):
-                return list(node.panels)
-            elif isinstance(node, DockingNode):
-                return collect(node.first) + collect(node.second)
-            return []
-
-        return collect(self.root)
+        return [panel for group in self._walk_groups() for panel in group.panels]
 
     def _find_first_group(self) -> DockingGroup | None:
         """Locate the first DockingGroup in the tree.
@@ -798,15 +840,7 @@ class DockingSplit:
         Returns:
             The first DockingGroup found, or None if the tree is empty.
         """
-
-        def find(node: DockingGroup | DockingNode) -> DockingGroup | None:
-            if isinstance(node, DockingGroup):
-                return node
-            elif isinstance(node, DockingNode):
-                return find(node.first) or find(node.second)
-            return None
-
-        return find(self.root)
+        return next(self._walk_groups(), None)
 
     def add_panel(self, panel: Panel, group: DockingGroup | None = None) -> None:
         """Add a panel to the docking tree and sync the panels list.
@@ -847,20 +881,12 @@ class DockingSplit:
         Args:
             content: The content that should be shown as active.
         """
-
-        def walk(node: DockingGroup | DockingNode) -> bool:
-            if isinstance(node, DockingGroup):
-                for i, panel in enumerate(node.panels):
-                    if panel.content is content:
-                        node._active = i
-                        self._set_active_group(node)
-                        return True
-                return False
-            elif isinstance(node, DockingNode):
-                return walk(node.first) or walk(node.second)
-            return False
-
-        walk(self.root)
+        for group in self._walk_groups():
+            for i, panel in enumerate(group.panels):
+                if panel.content is content:
+                    group._active = i
+                    self._set_active_group(group)
+                    return
 
     def __pt_container__(self) -> Container:
         """Return the container."""

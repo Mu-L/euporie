@@ -91,29 +91,25 @@ class TabBarControl(UIControl):
     @property
     def active(self) -> int | None:
         """Return the index of the active tab, or None if no tab is highlighted."""
-        current_active = self._active() if callable(self._active) else self._active
-
-        # Check if active tab has changed for scroll tracking
-        if self._last_active != current_active:
-            # Ensure active tab is visible
-            if current_active is not None:
-                self.scroll_to(current_active)
-
-            # Update last known active value
-            self._last_active = current_active
-
-        return current_active
+        return self._active() if callable(self._active) else self._active
 
     @active.setter
     def active(self, active: int | None | Callable[[], int | None]) -> None:
         """Set the currently active tab."""
-        # Store new active value
         self._active = active
 
-        # If it's a direct value (not callable), handle tab switching immediately
-        if not callable(active):
-            # Force property getter to handle the change
-            _ = self.active
+    def _track_active_scroll(self) -> int | None:
+        """Ensure the active tab is visible, tracking changes since the last render.
+
+        Returns:
+            The current active tab index.
+        """
+        current_active = self.active
+        if self._last_active != current_active:
+            if current_active is not None:
+                self.scroll_to(current_active)
+            self._last_active = current_active
+        return current_active
 
     def preferred_width(self, max_available_width: int) -> int | None:
         """Return the preferred width of the tab-bar control, the maximum available."""
@@ -299,9 +295,11 @@ class TabBarControl(UIControl):
         ]
         self.tab_widths = [len(x[0]) for x in renderings]
 
-        # Do initial scroll if first render
+        # On first render, initialize scroll position to the active tab
         if self.scroll == -1:
-            self.scroll_to(self._active() if callable(self._active) else self._active)
+            self._last_active = None
+        # Track active-tab changes and scroll to keep the active tab visible
+        self._track_active_scroll()
 
         # Apply scroll limits
         self.scroll = max(

@@ -7,28 +7,36 @@ import logging
 from typing import TYPE_CHECKING
 
 from apptk.application import Application
+from apptk.application.current import get_app
 from apptk.key_binding.key_bindings import KeyBindings
 from apptk.layout.containers import HSplit, Window
 from apptk.layout.controls import FormattedTextControl
 from apptk.layout.layout import Layout
+from apptk.layout.mouse import MouseHandlerWrapper
+from apptk.mouse_events import MouseButton, MouseEventType
 from apptk.styles.style import Style
-from apptk.widgets.docking import DockingPanel, DockingSplit
+from apptk.widgets.docking import DockingSplit
+from apptk.widgets.panel import Panel
 
 if TYPE_CHECKING:
+    from apptk.key_binding.key_bindings import NotImplementedOrNone
     from apptk.key_binding.key_processor import KeyPressEvent
+    from apptk.mouse_events import MouseEvent
 
 
-def create_panel_content(name: str, color: str) -> Window:
-    """Create a simple colored panel with a label.
+def create_panel_content(name: str, color: str) -> MouseHandlerWrapper:
+    """Create a simple colored, focusable panel with a label.
+
+    Clicking the panel focuses its content window.
 
     Args:
         name: The name to display in the panel.
         color: The background color style.
 
     Returns:
-        A Window containing the panel content.
+        A focusable container with a click-to-focus mouse handler.
     """
-    return Window(
+    window = Window(
         FormattedTextControl(
             f" This is the '{name}' panel.\n\n"
             f" Drag tabs to dock them in different positions:\n"
@@ -36,10 +44,23 @@ def create_panel_content(name: str, color: str) -> Window:
             f"   \u2022 Right edge \u2192 tile right\n"
             f"   \u2022 Top edge \u2192 tile above\n"
             f"   \u2022 Bottom edge \u2192 tile below\n"
-            f"   \u2022 Center \u2192 add as tab\n"
+            f"   \u2022 Center \u2192 add as tab\n",
+            focusable=True,
         ),
         style=color,
     )
+
+    def mouse_handler(mouse_event: MouseEvent) -> NotImplementedOrNone:
+        """Focus the window when clicked."""
+        if (
+            mouse_event.event_type == MouseEventType.MOUSE_DOWN
+            and mouse_event.button == MouseButton.LEFT
+        ):
+            get_app().layout.focus(window)
+            return None
+        return NotImplemented
+
+    return MouseHandlerWrapper(content=window, handler=mouse_handler)
 
 
 def main() -> None:
@@ -69,31 +90,31 @@ def main() -> None:
 
     # Create panels with different colors for visibility
     panels = [
-        DockingPanel(
+        Panel(
             title="Panel 1",
             content=create_panel_content("Panel 1", "bg:ansiblue fg:ansiwhite"),
         ),
-        DockingPanel(
+        Panel(
             title="Panel 2",
             content=create_panel_content("Panel 2", "bg:ansigreen fg:ansiblack"),
         ),
-        DockingPanel(
+        Panel(
             title="Panel 3",
             content=create_panel_content("Panel 3", "bg:ansired fg:ansiwhite"),
         ),
-        DockingPanel(
+        Panel(
             title="Panel 4",
             content=create_panel_content("Panel 4", "bg:ansiyellow fg:ansiblack"),
             closeable=True,
         ),
-        DockingPanel(
+        Panel(
             title="Panel 5",
             content=create_panel_content("Panel 5", "bg:ansimagenta fg:ansiwhite"),
             closeable=True,
         ),
     ]
 
-    docking = DockingSplit(panels=panels)
+    docking = DockingSplit(panels=panels, activate_on_focus=True)
 
     # Key bindings
     kb = KeyBindings()
