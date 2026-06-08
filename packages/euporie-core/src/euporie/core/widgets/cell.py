@@ -824,6 +824,19 @@ class Cell:
         # Tell the page this cell has been updated
         self.refresh()
 
+    def update_output(
+        self, output_json: dict[str, Any], own: bool, display_id: str
+    ) -> None:
+        """Update existing outputs which match a display ID."""
+        # Update the stored cell JSON
+        for existing in self.json.get("outputs", []):
+            if existing.get("transient", {}).get("display_id") == display_id:
+                existing["data"] = output_json.get("data", {})
+                existing["metadata"] = output_json.get("metadata", {})
+        # Update the rendered output area
+        self.output_area.update_display(output_json, display_id)
+        self.refresh()
+
     def clear_output(self, wait: bool = False) -> None:
         """Remove the cells output, optionally when new output is generated."""
         if wait:

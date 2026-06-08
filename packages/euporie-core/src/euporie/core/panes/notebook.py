@@ -70,6 +70,9 @@ class BaseNotebook(KernelPane, metaclass=ABCMeta):
                 ),
                 "set_execution_count": lambda n: self.cell.set_execution_count(n),
                 "add_output": self.new_output_default,
+                "update_output": lambda output, own, display_id: (
+                    self.cell.update_output(output, own, display_id)
+                ),
                 "clear_output": lambda wait: self.cell.clear_output(wait),
                 "set_metadata": lambda path, data: self.cell.set_metadata(path, data),
                 "set_status": self.set_status,
@@ -344,6 +347,7 @@ class BaseNotebook(KernelPane, metaclass=ABCMeta):
                 get_input=cell.get_input,
                 set_execution_count=cell.set_execution_count,
                 add_output=cell.add_output,
+                update_output=cell.update_output,
                 clear_output=cell.clear_output,
                 set_metadata=cell.set_metadata,
                 set_status=cell.set_status,

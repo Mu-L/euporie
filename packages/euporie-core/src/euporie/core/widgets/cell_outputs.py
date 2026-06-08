@@ -534,6 +534,19 @@ class CellOutputArea:
         for output in self.rendered_outputs:
             output.update()
 
+    def update_display(self, output_json: dict[str, Any], display_id: str) -> None:
+        """Update rendered outputs which match a display ID."""
+        new_data = output_json.get("data", {})
+        new_metadata = output_json.get("metadata", {})
+        for existing_json, rendered_output in zip(
+            self.display_json, self.rendered_outputs
+        ):
+            if existing_json.get("transient", {}).get("display_id") == display_id:
+                existing_json["data"] = new_data
+                existing_json["metadata"] = new_metadata
+                rendered_output.update()
+        get_app().invalidate()
+
     def reset(self) -> None:
         """Clear all outputs from the output area."""
         self.style = ""

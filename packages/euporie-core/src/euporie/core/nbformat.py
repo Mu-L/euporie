@@ -288,4 +288,14 @@ def output_from_msg(msg: dict[str, Any]) -> NotebookNode:
     """Create a NotebookNode for an output from a kernel's IOPub message."""
     from nbformat.v4 import output_from_msg as output_from_msg_orig
 
-    return output_from_msg_orig(msg)
+    # `update_display_data` has the same structure as `display_data`, but is not
+    # recognized by nbformat, so rewrite its message type
+    if msg.get("header", {}).get("msg_type") == "update_display_data":
+        msg = {**msg, "header": {**msg["header"], "msg_type": "display_data"}}
+
+    output = output_from_msg_orig(msg)
+    # Preserve the display_id from the transient field so live-updating
+    # displays can be matched and updated later
+    if display_id := msg.get("content", {}).get("transient", {}).get("display_id"):
+        output.setdefault("transient", {})["display_id"] = display_id
+    return output

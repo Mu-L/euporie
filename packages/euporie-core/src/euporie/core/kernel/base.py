@@ -54,6 +54,7 @@ class MsgCallbacks(TypedDict, total=False):
     get_input: Callable[[str, bool], None] | None
     set_execution_count: Callable[[int], None] | None
     add_output: Callable[[dict[str, Any], bool], None] | None
+    update_output: Callable[[dict[str, Any], bool, str], None] | None
     add_input: Callable[[dict[str, Any], bool], None] | None
     clear_output: Callable[[bool], None] | None
     done: Callable[[dict[str, Any]], None] | None

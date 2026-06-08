@@ -138,6 +138,8 @@ class JupyterKernel(BaseKernel):
         )
         self.client_lock = threading.Lock()
         self._debug_seq = 0
+        # Map display IDs to the msg_id that originally created the display
+        self.display_id_msg_id: dict[str, str] = {}
 
         # Accessing the kernel spec causes `readline` to be imported, which causes the
         # terminal to be set to cooked mode on MacOS.
@@ -556,14 +558,35 @@ class JupyterKernel(BaseKernel):
     def on_iopub_display_data(self, rsp: dict[str, Any], own: bool) -> None:
         """Call callbacks for an iopub display data response."""
         msg_id = rsp.get("parent_header", {}).get("msg_id")
+        # Record the display_id so it can be updated later
+        if display_id := rsp.get("content", {}).get("transient", {}).get("display_id"):
+            self.display_id_msg_id[display_id] = msg_id
         if callable(add_output := self.msg_id_callbacks[msg_id]["add_output"]):
             add_output(output_from_msg(rsp), own)
 
     def on_iopub_update_display_data(self, rsp: dict[str, Any], own: bool) -> None:
         """Call callbacks for an iopub update display data response."""
-        msg_id = rsp.get("parent_header", {}).get("msg_id")
-        if callable(add_output := self.msg_id_callbacks[msg_id]["add_output"]):
-            add_output(output_from_msg(rsp), own)
+        try:
+            msg_id = rsp.get("parent_header", {}).get("msg_id")
+            display_id = rsp.get("content", {}).get("transient", {}).get("display_id")
+            # Route the update to the cell which originally created the display
+            origin_msg_id = (
+                self.display_id_msg_id.get(display_id) if display_id else None
+            )
+            if origin_msg_id is not None and callable(
+                update_output := self.msg_id_callbacks[origin_msg_id].get(
+                    "update_output"
+                )
+            ):
+                update_output(output_from_msg(rsp), own, display_id)
+            elif callable(
+                add_output := self.msg_id_callbacks[msg_id].get("add_output")
+            ):
+                # Fall back to adding output if we cannot match the display
+                # e.g. in a console
+                add_output(output_from_msg(rsp), own)
+        except Exception:
+            log.exception("Kernel error")
 
     def on_iopub_execute_result(self, rsp: dict[str, Any], own: bool) -> None:
         """Call callbacks for an iopub execute result response."""
