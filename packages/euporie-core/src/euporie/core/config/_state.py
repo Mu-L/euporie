@@ -1,4 +1,4 @@
-"""State subclass — app-managed persistent state."""
+"""State subclass - app-managed persistent state."""
 
 from __future__ import annotations
 

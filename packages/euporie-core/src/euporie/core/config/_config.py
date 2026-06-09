@@ -1,4 +1,4 @@
-"""Config subclass — user-editable configuration."""
+"""Config subclass - user-editable configuration."""
 
 from __future__ import annotations
 

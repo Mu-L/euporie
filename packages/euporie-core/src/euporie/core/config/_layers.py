@@ -571,7 +571,7 @@ class CliLayer(Layer):
             settings: Settings to add to the parser before parsing.
         """
         if self._loaded:
-            # Parser is already fully populated — single pass is enough.
+            # Parser is already fully populated - single pass is enough.
             namespace, remaining = self.parser.parse_known_intermixed_args(self._args)
             self.clear()
             self.update(

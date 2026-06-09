@@ -184,7 +184,7 @@ class Application(PtkApplication, Generic[_AppResult]):
                 self.output.ask_for_iterm_graphics_status()
                 self.output.ask_for_sgr_pixel_status()
                 self.output.ask_for_csiu_status()
-                # Send a DSR sentinel query last — the terminal will respond
+                # Send a DSR sentinel query last - the terminal will respond
                 # with ``\x1b[0n``, letting us know all prior responses have
                 # been received.
                 self.output.ask_for_device_status()

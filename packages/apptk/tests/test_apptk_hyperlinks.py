@@ -178,7 +178,7 @@ class TestHyperlinkEscapeCodeCache:
 
         result = cache[attrs]
 
-        # Should NOT contain any OSC 8 sequence — closing is handled by renderer
+        # Should NOT contain any OSC 8 sequence - closing is handled by renderer
         assert "\x1b]8;" not in result
 
     def test_escape_code_empty_link_omits_osc8(self) -> None:
@@ -252,7 +252,7 @@ class TestHyperlinkRendererTransitions:
         assert "\x1b]8;id=" in linked_result
         assert "https://example.com" in linked_result
 
-        # Unlinked should NOT contain OSC 8 — renderer handles closing
+        # Unlinked should NOT contain OSC 8 - renderer handles closing
         assert "\x1b]8;" not in unlinked_result
 
     def test_different_links_in_cache(self) -> None:
@@ -278,7 +278,7 @@ class TestHyperlinkSplitFragments:
         """Test that splitting a linked fragment keeps the same link ID."""
         cache = _EscapeCodeCache(ColorDepth.DEPTH_24_BIT)
 
-        # Simulate a linked fragment split into two parts — both have the
+        # Simulate a linked fragment split into two parts - both have the
         # same style attrs, so the cache should return the same escape code
         # (and therefore the same link ID) for both.
         attrs = DEFAULT_ATTRS._replace(link="https://example.com")

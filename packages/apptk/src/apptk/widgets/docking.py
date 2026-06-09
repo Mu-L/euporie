@@ -261,7 +261,7 @@ class DockingTabBarControl(TabBarControl):
         # Let the parent handle close buttons, scroll, and tab activation first
         result = super().mouse_handler(mouse_event)
 
-        # Parent handled it (e.g., close button click) — cancel any drag
+        # Parent handled it (e.g., close button click) - cancel any drag
         if result is None and self.docking_split.drag_state is not None:
             self.docking_split.drag_state = None
             self.docking_split.show_drop_zones()

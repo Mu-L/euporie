@@ -126,7 +126,7 @@ TIPS: list[str] = [
     #
     "**Select and Copy Cell Output**<br>"
     "Click and drag in a cell output to select text and have it copied to "
-    "your clipboard — no need to leave the notebook.",
+    "your clipboard - no need to leave the notebook.",
     #
     "**Use Helix Key Bindings**<br>"
     "Head to *Settings → Editor key bindings* and choose *Helix* for "
@@ -138,7 +138,7 @@ TIPS: list[str] = [
     #
     "**View Cell Attachments**<br>"
     "Markdown cells with embedded image attachments are now rendered "
-    "inline — no extra steps needed.",
+    "inline - no extra steps needed.",
     #
     "**Toggle Menu Icons**<br>"
     "Go to *Settings → UI Elements → Icons* to show or hide icons in menus "

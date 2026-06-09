@@ -185,7 +185,7 @@ def read(
     try:
         nb_dict = json.load(fp, **kwargs)
     except (json.JSONDecodeError, UnicodeDecodeError):
-        # Not a JSON file — requires jupytext or nbformat to read
+        # Not a JSON file - requires jupytext or nbformat to read
         nb_dict = None
     else:
         # Fallback for non-v4 notebooks

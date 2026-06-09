@@ -489,7 +489,7 @@ class DisplayControl(UIControl):
                 )
                 if start.y <= i <= end.y:
                     if start.y < i < end.y:
-                        # Middle line — fully selected, no need to explode
+                        # Middle line - fully selected, no need to explode
                         line = [
                             (f"{style} class:selected", *rest) for style, *rest in line
                         ]
