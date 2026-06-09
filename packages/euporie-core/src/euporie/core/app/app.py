@@ -274,6 +274,8 @@ class BaseApp(ConfigurableApp, Application, ABC):
         )
         # Contains the opened tab containers
         self.panes: list[Pane] = []
+        # An app to launch after this one exits (used for app handoff)
+        self._handoff_app: BaseApp | None = None
         self.on_tabs_change = Event(self)
         # Holds the optional toolbars
         self.search_bar: SearchBar | None = None
@@ -516,20 +518,25 @@ class BaseApp(ConfigurableApp, Application, ABC):
         # Run the application
         with create_app_session():
             # Create an instance of the app and run it
-            app = cls()
-            if in_main_thread():
-                # Handle SIGTERM while the app is running
-                original_sigterm = signal.getsignal(signal.SIGTERM)
-                signal.signal(signal.SIGTERM, app.cleanup)
-            # Set and run the app
-            with set_app(app):
-                try:
-                    result = app.run()
-                except (EOFError, KeyboardInterrupt):
-                    result = None
-                finally:
-                    if in_main_thread():
-                        signal.signal(signal.SIGTERM, original_sigterm)
+            app: BaseApp | None = cls()
+            result = None
+            while app is not None:
+                if in_main_thread():
+                    # Handle SIGTERM while the app is running
+                    original_sigterm = signal.getsignal(signal.SIGTERM)
+                    signal.signal(signal.SIGTERM, app.cleanup)
+                # Set and run the app
+                with set_app(app):
+                    try:
+                        result = app.run()
+                    except (EOFError, KeyboardInterrupt):
+                        result = None
+                    finally:
+                        if in_main_thread():
+                            signal.signal(signal.SIGTERM, original_sigterm)
+                # If the app requested a handoff to another app, run that next
+                next_app = app._handoff_app
+                app = next_app
         return result
 
     @overload

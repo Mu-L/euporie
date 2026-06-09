@@ -16,44 +16,58 @@ if TYPE_CHECKING:
 
 
 @add_cmd()
-async def _convert_to_notebook() -> None:
+def _convert_to_notebook() -> None:
     """Convert the current console session to a notebook."""
-    from apptk.application.run_in_terminal import in_terminal
-
     from euporie.console.app import get_app
     from euporie.console.panes.console import Console
+    from euporie.core.kernel.base import NoKernel
     from euporie.notebook.app import NotebookApp
+    from euporie.notebook.panes.notebook import Notebook
 
     app = get_app()
-    NotebookApp.config = app.config
-    NotebookApp.load_settings()
-    NotebookApp.config.__init__(app="notebook")  # type: ignore [misc]
     nb_app = NotebookApp()
-    # Use same event loop
-    nb_app.loop = app.loop
+
     for tab in app.panes:
         if isinstance(tab, Console):
-            from euporie.notebook.panes.notebook import Notebook
+            # Capture live state before detaching the kernel from the console
+            kernel = tab.kernel
+            comms = tab.comms
+            history = tab.history
+            current_input = tab.input_box.buffer.text
+
+            # Stop the console driving the transferred kernel
+            tab.app.before_render -= tab.render_outputs
+
+            # Detach the kernel from the console so it isn't shut down on exit
+            tab.kernel = NoKernel(tab)
 
             nb = Notebook(
                 app=nb_app,
                 path=tab.path,
-                kernel=tab.kernel,
-                comms=tab.comms,
+                kernel=kernel,
+                comms=comms,
                 json=tab.json,
             )
-            # Set the history to the console's history
-            nb.history = tab.history
-            # Add the current input
-            nb.add(len(nb.json["cells"]) + 1, source=tab.input_box.buffer.text)
-            # Add the new notebook to the notebook app
-            nb_app.panes.append(nb)
-            # Tell notebook that the kernel has already started
+            # The notebook was created with a path, so kernel init was deferred.
+            # Mark it loaded and explicitly re-initialise the notebook's kernel
+            # with the captured kernel and comms. This guarantees nb.kernel is the
+            # real transferred kernel (not NoKernel) before kernel_started() is
+            # called, avoiding the wait_for_status("idle") hang.
+            nb.loaded = True
+            nb._really_init_kernel = None
+            nb.init_kernel(kernel=kernel, comms=comms)
+
+            # Transfer the console's history
+            nb.history = history
+            # Add the current input as a new cell
+            nb.add(len(nb.json["cells"]) + 1, source=current_input)
+            # Add the notebook to the notebook app
+            nb_app.add_tab(nb)
+            # Tell the notebook the kernel has already started
             nb.kernel_started()
 
-    async with in_terminal():
-        await nb_app.run_async()
-
+    # Schedule the notebook app to run after the console app exits, then exit
+    app._handoff_app = nb_app
     app.exit()
 
 

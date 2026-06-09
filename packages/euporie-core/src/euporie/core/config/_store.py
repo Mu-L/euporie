@@ -170,6 +170,8 @@ class SettingStore:
         self._valid_config = True
         self._schema_validate = fastjsonschema.compile(self._schema, use_default=False)
 
+        self._register_all_commands()
+
     @property
     def _schema(self) -> dict[str, Any]:
         """Return a JSON schema for validation."""
@@ -216,8 +218,6 @@ class SettingStore:
             # Replace contents in-place so the ChainMap sees new values
             layer.clear()
             layer.update(validated)
-
-        self._register_all_commands()
 
     @property
     def remaining_args(self) -> list[str]:
