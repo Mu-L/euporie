@@ -80,6 +80,13 @@ v3.x.x
 
          Additional background patterns
 
+   .. grid-item::
+
+      .. figure:: https://placehold.co/800x600?text=Command+Bar
+         :target: https://placehold.co/1600x1200?text=Command+Bar
+
+         Command bar
+
 
 ----
 
