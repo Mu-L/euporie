@@ -202,7 +202,7 @@ Euporie requires Python 3.10 or later. It works on Linux, Windows and MacOS
     :target: https://pypi.python.org/project/euporie/
     :alt: Supported Python versions
 
-.. |TryOnline| image:: https://img.shields.io/badge/Try%20it%20online-%E2%96%B6%20Launch%20demo-success?style=for-the-badge&logo=jupyter
+.. |TryOnline| image:: https://img.shields.io/badge/try-online-red.svg?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMTAiIGZpbGw9IiNkMDAiLz48ZyBmaWxsPSIjYTAyIj48cGF0aCBkPSJNMi40MSAxNi41bC40NTguNWgxNC4yNjRsLjQ1OC0uNXptLTIuMDg1LTRBMTAgMTAgMCAwIDAgMS4zNCAxNUgzLjVjMC0uNTIzLjM5Ny0uOTIyLjg2MS0xLjE1NFM1LjQxMSAxMy41IDYgMTMuNXMxLjE3NS4xMTQgMS42MzkuMzQ2Ljg2MS42MzIuODYxIDEuMTU0aDEwLjE2YTEwIDEwIDAgMCAwIDEuMDE1LTIuNXpNLjA1NiA5QTEwIDEwIDAgMCAwIDAgMTBhMTAgMTAgMCAwIDAgLjA1NiAxaDE5Ljg4N0ExMCAxMCAwIDAgMCAyMCAxMGExMCAxMCAwIDAgMC0uMDUtMXpNMi40MSAzLjVsLS40MDEuNUgxOGwtLjQwMi0uNXpNMS4zNCA1bC0uMjY1LjVIMTguOTNsLS4yNzEtLjV6bS0uNDg1Ljk3MWExMCAxMCAwIDAgMC0uMzgyIDFIMTkuNTNhMTAgMTAgMCAwIDAtLjM3OC0xeiIvPjxlbGxpcHNlIGN4PSI2IiBjeT0iMTUiIHJ4PSIyIiByeT0iMSIvPjwvZz48Y2lyY2xlIGN4PSIxNSIgY3k9IjEwIiByPSIxLjc1Ii8+PHBhdGggZD0iTTQuNzQ1IDE4LjVsLjQyNC4yNWg5LjY2MWwuNDI0LS4yNXptLTEuMzUtMWwuNjE2LjVoMTEuOTc3bC42MTYtLjV6IiBmaWxsPSIjYTAyIi8+PC9zdmc+Cg==
    :target: https://euporie.readthedocs.io/en/latest/_static/lite.html
    :alt: Try euporie online in your browser
 
@@ -210,6 +210,6 @@ Euporie requires Python 3.10 or later. It works on Linux, Windows and MacOS
     :target: https://github.com/joouha/euporie/blob/main/LICENSE
     :alt: View license
 
-.. |Stars| image:: https://img.shields.io/github/stars/joouha/euporie
+.. |Stars| image:: https://img.shields.io/github/stars/joouha/euporie?style=plastic&color=gold
     :target: https://github.com/joouha/euporie/stargazers
     :alt: ⭐
