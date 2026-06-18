@@ -7,7 +7,7 @@
 euporie
 #######
 
-|PyPI| |RTD| |License| |Stars| |TryOnline|
+|TryOnline| |Stars| |RTD| |PyPI| |License|
 
 .. content_start
 
@@ -206,10 +206,10 @@ Euporie requires Python 3.10 or later. It works on Linux, Windows and MacOS
    :target: https://euporie.readthedocs.io/en/latest/_static/lite.html
    :alt: Try euporie online in your browser
 
-.. |License| image:: https://img.shields.io/github/license/joouha/euporie.svg
+.. |License| image:: https://img.shields.io/github/license/joouha/euporie?style=flat&color=purple
     :target: https://github.com/joouha/euporie/blob/main/LICENSE
     :alt: View license
 
-.. |Stars| image:: https://img.shields.io/github/stars/joouha/euporie?style=plastic&color=gold
+.. |Stars| image:: https://img.shields.io/github/stars/joouha/euporie?style=flat&color=gold
     :target: https://github.com/joouha/euporie/stargazers
     :alt: ⭐
