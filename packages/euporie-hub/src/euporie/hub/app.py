@@ -16,8 +16,9 @@ except ModuleNotFoundError as err:
 
 from apptk.contrib.ssh import PromptToolkitSSHSession
 
-from euporie.core.app import APP_ALIASES
+from euporie.core import settings as core_settings
 from euporie.core.app.base import ConfigurableApp
+from euporie.core.app.current import APP_ALIASES, available_apps
 from euporie.hub import settings as hub_settings
 
 if TYPE_CHECKING:
@@ -68,6 +69,16 @@ class HubApp(ConfigurableApp):
     states: ClassVar[list[Setting]] = []
 
     settings: ClassVar[list[Setting]] = [
+        # Version
+        core_settings.version,
+        # Logging
+        core_settings.log_file,
+        core_settings.log_level,
+        core_settings.log_level_stdout,
+        core_settings.log_config,
+        # Appearance
+        core_settings.syntax_theme,
+        # Hub specific
         hub_settings.hub_app,
         hub_settings.host,
         hub_settings.port,
@@ -101,12 +112,9 @@ class HubApp(ConfigurableApp):
         chosen_app = APP_ALIASES.get(chosen_app, chosen_app)
 
         # Import the hubbed app
-        from euporie.core.__main__ import available_apps
-
         apps = available_apps()
-        if entry := apps.get(chosen_app):
-            app_cls = entry.load()
-        else:
+        app_cls = apps.get(chosen_app)
+        if app_cls is None:
             raise ModuleNotFoundError("Application `%s` not found", cls.config.app)
 
         # Run the HubApp in an SSH server
