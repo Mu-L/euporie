@@ -14,7 +14,7 @@ Setting Up Development Environment
 
 2. Install dependencies using uv::
 
-    uv sync
+    uv sync --all-groups --all-packages
 
 3. Install pre-commit hooks::
 

@@ -343,7 +343,6 @@ class CommandBar:
 
     @add_cmd(
         name="activate-command-bar",
-        hidden=True,
         bindings=[
             {"keys": "A-:", "is_global": True},
             {
@@ -360,7 +359,6 @@ class CommandBar:
 
     @add_cmd(
         name="activate-command-bar-shell",
-        hidden=True,
         bindings=[
             {"keys": ["A-!"], "is_global": True},
             {"keys": ["!"], "filter": ~buffer_has_focus | navigation_mode},

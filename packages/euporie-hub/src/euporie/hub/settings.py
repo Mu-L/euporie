@@ -103,6 +103,6 @@ auth = Setting(
         .. warning::
 
            This option is dangerous, as arbitrary code can be executed through
-           euporie apps.
+           euporie :term:`apps <App>`.
     """,
 )

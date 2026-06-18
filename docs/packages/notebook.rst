@@ -2,9 +2,11 @@
 Euporie Notebook
 ################
 
-In euporie's notebooks editor, you can interactively edit and run Jupyter notebooks from the comfort of your terminal.
+.. include:: ../../packages/euporie-notebook/README.rst
+   :start-after: .. content_start
+   :end-before: .. getting_started_end
 
-Euporie supports most of the features of Jupyter Notebooks, so users of Jupyter should find it intuitive to use.
+----
 
 **********
 User Guide
@@ -177,6 +179,27 @@ Using the Command Palette
 Practically every action in euporie (including all of those listed above) can be performed through the :term:`command palette`, which can be summoned using :kbd:`Ctrl+Space`. You can type in the input box to search for a command, use the arrow keys to select a command from the list, and press :kbd:`Enter` to run the selected command.
 
 .. video:: https://user-images.githubusercontent.com/12154190/183313430-abf73ea5-0f36-4823-a6b9-ad1d47b8ec3f.webm
+   :width: 100%
+
+|
+
+Using the Command Bar
+=====================
+
+As an alternative to the searchable :term:`command palette`, the
+:term:`command bar` lets you type a command by name from a modal, single-line
+input at the bottom of the screen, inspired by the vim and helix command line.
+Summon it with :kbd:`:` or :kbd:`Alt+:`, type a command name (tab-completion
+is available), and press :kbd:`Enter` to run it. Unrecognised commands are
+rejected, and previously entered commands are kept in a searchable history.
+
+Prefix the input with ``!`` -- or summon the bar directly with :kbd:`Alt+!`
+-- to run a system shell command. Close the command bar without running
+anything with :kbd:`Escape` or :kbd:`Ctrl+C`.
+
+.. TODO: Replace this placeholder with a video demonstrating the command bar.
+
+.. video:: https://example.com/REPLACE-WITH-COMMAND-BAR-DEMO.webm
    :width: 100%
 
 |
