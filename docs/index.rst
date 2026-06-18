@@ -9,31 +9,36 @@ Euporie's Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Guide
+   :caption: Getting Started
 
+   pages/overview
    pages/installation
    pages/getting_started
-   pages/overview
    pages/gallery
-   pages/configuration
-   pages/keybindings
-   pages/cli
-   pages/troubleshooting
-   pages/glossary
-   pages/related
-   pages/changelog
 
 .. toctree::
    :maxdepth: 2
    :caption: Guides
 
-   pages/guides/terminal_graphics
-   pages/guides/ipywidgets
    pages/guides/kernels
-   pages/guides/lsp
+   pages/guides/ipywidgets
+   pages/guides/terminal_graphics
    pages/guides/theming
+   pages/guides/lsp
    pages/guides/remote_notebooks
    pages/guides/multiplexers
+   pages/troubleshooting
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
+   pages/configuration
+   pages/keybindings
+   pages/cli
+   pages/glossary
+   pages/related
+   pages/changelog
 
 .. toctree::
    :maxdepth: 2
