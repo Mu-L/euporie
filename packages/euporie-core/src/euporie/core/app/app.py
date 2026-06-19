@@ -315,6 +315,9 @@ class BaseApp(ConfigurableApp, Application, ABC):
         )
         self.config.events.syntax_theme += self.update_palette
         self.config.events.color_scheme += self.update_palette
+        self.config.events.custom_foreground_color += self.update_palette
+        self.config.events.custom_background_color += self.update_palette
+        self.config.events.accent_color += self.update_palette
         self.config.events.log_level += lambda x: setup_logs(self.config)
         self.config.events.log_file += lambda x: setup_logs(self.config)
         self.config.events.log_config += lambda x: setup_logs(self.config)
