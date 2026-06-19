@@ -369,7 +369,7 @@ class NotebookApp(BaseApp):
                     ),
                     (
                         "Variables",
-                        lambda: "" if self.config.show_icons else [("bold", "V")],
+                        lambda: "󰞄" if self.config.show_icons else [("bold", "V")],
                         VariableList(lambda: getattr(self.pane, "kernel", None)),
                     ),
                 ]
