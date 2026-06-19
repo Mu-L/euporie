@@ -342,6 +342,15 @@ class SettingStore:
                 keys=setting.kwargs.get("keys"),
             )(partial(self.toggle, setting.name))
 
+        add_cmd(
+            name=f"set-{cmd_name}",
+            hidden=setting.hidden,
+            title=f"Set {setting.title}",
+            menu_title=setting.kwargs.get("menu_title"),
+            description=f'Set the value of "{setting.name}"',
+            filter=setting.kwargs.get("filter", True),
+        )(partial(self._set_value, setting.name))
+
         choices = setting.choices or schema.get("enum", []) or []
         if isinstance(choices, dict):
             choices = list(choices.keys())
@@ -357,6 +366,28 @@ class SettingStore:
                 description=f'Set "{setting.name}" to "{choice}"',
                 filter=setting.kwargs.get("filter", True),
             )(partial(setattr, self, setting.name, choice))
+
+    def _set_value(self, name: str, value: Any = None) -> None:
+        """Set a setting value, coercing and validating against its schema.
+
+        The value is validated against the setting's JSON schema, which
+        enforces the correct type and any choice constraints. Values that
+        fail validation are rejected with a warning.
+
+        Args:
+            name: The setting name.
+            value: The value to set.
+        """
+        setting = self.settings[name]
+        # Resolve choice aliases (map display value back to stored value)
+        if isinstance(choices := setting.choices, Mapping):
+            for k, v in choices.items():
+                if v == value:
+                    value = k
+                    break
+        validated = self._validate({name: value}, f"set-{name}")
+        if name in validated:
+            setattr(self, name, validated[name])
 
     def _toggle_list_item(self, name: str, item: Any) -> None:
         """Toggle an item in a list-type setting.
