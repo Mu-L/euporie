@@ -454,6 +454,29 @@ class Command:
             app.invalidate()
 
     @cached_property
+    def requires_arguments(self) -> bool:
+        """Return whether the handler has required arguments without defaults.
+
+        Inspects the handler's signature for positional or keyword parameters
+        that lack default values. The ``event`` parameter and variadic
+        parameters (``*args``, ``**kwargs``) are ignored.
+
+        Returns:
+            True if the handler has at least one required argument.
+        """
+        from inspect import Parameter
+
+        sig = signature(self.handler)
+        for name, param in sig.parameters.items():
+            if name == "event":
+                continue
+            if param.kind in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD):
+                continue
+            if param.default is Parameter.empty:
+                return True
+        return False
+
+    @cached_property
     def key_handler(self) -> KeyHandlerCallable:
         """Return a key handler for the command."""
         sig = signature(self.handler)

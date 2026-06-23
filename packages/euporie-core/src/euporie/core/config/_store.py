@@ -367,7 +367,7 @@ class SettingStore:
                 filter=setting.kwargs.get("filter", True),
             )(partial(setattr, self, setting.name, choice))
 
-    def _set_value(self, name: str, value: Any = None) -> None:
+    def _set_value(self, name: str, value: Any) -> None:
         """Set a setting value, coercing and validating against its schema.
 
         The value is validated against the setting's JSON schema, which

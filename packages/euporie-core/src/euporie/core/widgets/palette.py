@@ -248,7 +248,7 @@ class CommandPalette(Dialog):
             "(?=({}))".format(".*?".join(map(re.escape, buffer.text))), re.IGNORECASE
         )
         for cmd in set(COMMANDS.values()):
-            if not cmd.hidden():
+            if not cmd.hidden() and not cmd.requires_arguments:
                 matches = list(regex.finditer(cmd.title))
                 if matches:
                     # Prefer the match closest to the left, then shortest.
@@ -256,7 +256,9 @@ class CommandPalette(Dialog):
                     self.matches.append(
                         _CommandMatch(len(best.group(1)), best.start(), cmd)
                     )
-        self.matches = sorted(self.matches, key=lambda m: (m.length, m.position))
+        self.matches = sorted(
+            self.matches, key=lambda m: (m.length, m.position, m.command.title)
+        )
 
         # Ensure the selected index is within the list of matches
         self.index = min(len(self.matches) - 1, max(0, self.index))
