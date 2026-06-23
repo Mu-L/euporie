@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from apptk.application.current import get_app
 from apptk.commands import add_cmd
 from apptk.filters import buffer_has_focus
+from apptk.filters.buffer import cursor_at_start_of_line
 
 from euporie.core.filters import pane_has_focus, pane_type_has_focus
 
@@ -70,7 +71,14 @@ def _focus_next() -> None:
     get_app().layout.focus_next()
 
 
-@add_cmd(keys=["s-tab"], filter=~buffer_has_focus)
+@add_cmd(
+    bindings=[
+        {
+            "keys": ["s-tab"],
+            "filter": ~buffer_has_focus | (buffer_has_focus & cursor_at_start_of_line),
+        },
+    ]
+)
 def _focus_previous() -> None:
     """Focus the previous control."""
     get_app().layout.focus_previous()

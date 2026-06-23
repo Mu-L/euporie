@@ -19,6 +19,7 @@ from apptk.document import Document
 from apptk.filters import (
     Condition,
     buffer_has_focus,
+    buffer_is_empty,
     has_focus,
     has_selection,
     is_done,
@@ -440,7 +441,7 @@ class KernelInput(TextArea):
 
     @staticmethod
     @add_cmd(
-        filter=buffer_is_code & buffer_has_focus & ~has_selection,
+        filter=buffer_is_code & buffer_has_focus & ~buffer_is_empty & ~has_selection,
         keys=["s-tab"],
     )
     async def _show_contextual_help() -> None:
