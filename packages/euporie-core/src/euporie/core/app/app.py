@@ -186,7 +186,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
         "clear-screen",
         "open-file",
         "save-as",
-        "toggle-command-palette",
+        "show-command-palette",
         "activate-command-bar",
         "activate-command-bar-shell",
     )
