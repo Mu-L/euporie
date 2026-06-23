@@ -142,9 +142,12 @@ class Pager:
         )
         dummy = DummyContainer()
         self.container = DynamicContainer(lambda: inner if self.visible() else dummy)
+        self._prev_control = None
 
     def focus(self) -> None:
         """Focus the pager."""
+        layout = get_app().layout
+        self._prev_control = layout.current_control
         get_app().layout.focus(self)
 
     def hide(self) -> None:
@@ -153,10 +156,15 @@ class Pager:
             self.state = None
             # Focus previous control if this pager has focus
             layout = get_app().layout
-            if layout.has_focus(self):
-                previous_control = layout.previous_control
-                if previous_control in layout.find_all_controls():
-                    layout.focus(previous_control)
+            if self._prev_control is not None:
+                try:
+                    layout.focus(self._prev_control)
+                except Exception:
+                    layout.focus_previous()
+                finally:
+                    self._prev_control = None
+            else:
+                layout.focus_previous()
 
     @property
     def state(self) -> PagerState | None:
