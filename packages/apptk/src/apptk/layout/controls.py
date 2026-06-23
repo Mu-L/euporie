@@ -7,7 +7,6 @@ from functools import cached_property
 from typing import TYPE_CHECKING
 
 from apptk.data_structures import Point
-from apptk.formatted_text.utils import _ZERO_WIDTH_FRAGMENTS
 from apptk.lexers import DynamicLexer
 from apptk.lexers.pygments import PygmentsLexer
 from apptk.utils import get_cwidth
@@ -72,10 +71,10 @@ class UIContent(PtkUIContent):
             x = 0
             for style, text, *_ in line:
                 for part in style.split():
-                    if part.startswith("[Graphic_"):
+                    if part.startswith("[Graphic_") and part.endswith("]"):
                         key = part[9:-1]  # Extract key from [Graphic_xxx]
                         positions[key] = Point(x, y)
-                    if part in _ZERO_WIDTH_FRAGMENTS:
+                    if part.startswith("[") and part.endswith("]"):
                         break
                 else:
                     x += get_cwidth(text)

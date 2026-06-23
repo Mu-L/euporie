@@ -29,7 +29,15 @@ if TYPE_CHECKING:
         to_formatted_text as to_formatted_text,
     )
 
-_ZERO_WIDTH_FRAGMENTS = {"[ZeroWidthEscape]", "[ReverseOverwrite]"}
+
+def _is_zero_width(style: str) -> bool:
+    """Return True if the style marks a zero-width special fragment.
+
+    Special fragments (e.g. ``[ZeroWidthEscape]``, ``[ReverseOverwrite]``,
+    ``[Graphic_123]``) use bracketed markers in their style strings. Regular
+    style strings never contain ``[``, so its presence is a reliable indicator.
+    """
+    return "[" in style
 
 
 def fragment_list_width(fragments: StyleAndTextTuples) -> int:
@@ -48,11 +56,7 @@ def fragment_list_width(fragments: StyleAndTextTuples) -> int:
     """
     return sum(
         get_cwidth(c)
-        for item in (
-            frag
-            for frag in fragments
-            if not any(x in frag[0] for x in _ZERO_WIDTH_FRAGMENTS)
-        )
+        for item in (frag for frag in fragments if not _is_zero_width(frag[0]))
         for c in item[1]
     )
 
@@ -138,6 +142,7 @@ def strip(
                 if (
                     result
                     and not text
+                    and not _is_zero_width(style)
                     and (not only_unstyled or (only_unstyled and bg == "default"))
                 ):
                     del result[index]
@@ -146,7 +151,7 @@ def strip(
 
             if (
                 result
-                and "[ZeroWidthEscape]" not in style
+                and not _is_zero_width(style)
                 and (not only_unstyled or (only_unstyled and bg == "default"))
             ):
                 result[index] = (style, text, *rest)
@@ -197,9 +202,7 @@ def truncate(
         used_width = 0
         for i, item in enumerate(line):
             fragment_width = sum(
-                get_cwidth(c)
-                for c in item[1]
-                if not any(x in item[0] for x in _ZERO_WIDTH_FRAGMENTS)
+                get_cwidth(c) for c in item[1] if not _is_zero_width(item[0])
             )
             if (
                 used_width + fragment_width > width - phw
@@ -240,11 +243,16 @@ def substring(
             end = width + end
     x = 0
     for style, text, *extra in ft:
-        if any(x in style for x in _ZERO_WIDTH_FRAGMENTS):
+        is_special = _is_zero_width(style)
+        if is_special:
             frag_len = 0
         else:
             frag_len = sum(get_cwidth(c) for c in text)
-        if (start <= x + frag_len <= end + frag_len) and (
+        if is_special:
+            # Always preserve zero-width special fragments within range
+            if start <= x <= end:
+                output.append(cast("OneStyleAndTextTuple", (style, text, *extra)))
+        elif (start <= x + frag_len <= end + frag_len) and (
             (text := text[max(0, start - x) : end - x]) or style
         ):
             output.append(cast("OneStyleAndTextTuple", (style, text, *extra)))
