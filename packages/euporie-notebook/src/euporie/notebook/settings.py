@@ -113,8 +113,8 @@ show_side_bar = Setting(
     name="show_side_bar",
     flags=["--show-side-bar"],
     type_=bool,
-    title="side-bar",
-    help_="Show the side-bar",
+    title="side bar",
+    help_="Show the side bar",
     default=True,
     schema={
         "type": "boolean",
@@ -145,14 +145,11 @@ side_bar_panel_index = Setting(
     type_=lambda x: int(x) if str(x).isdigit() else None,
     help_="Active side-bar panel index",
     default=0,
-    choices={
-        -1: None,
-        **{i: i for i in range(99)},
-    },
-    schema={"type": ["integer"], "minimum": -1},
+    choices={-1: None, 0: 0, 1: 1, 2: 2, 3: 3},
+    schema={"type": ["integer"], "minimum": -1, "maximum": 3},
     description="""
         The index of the currently active side-bar panel, or ``None`` if no panel is
-        active. The default "-1" selects the first panel on initial startup.
+        active. The default "0" selects the first panel on initial startup.
     """,
 )
 

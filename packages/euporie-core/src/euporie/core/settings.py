@@ -882,7 +882,7 @@ show_icons = Setting(
     type_=bool,
     title="Icons",
     help_="Show icons throughout the UI",
-    default=False,
+    default=True,
     schema={
         "type": "boolean",
     },
