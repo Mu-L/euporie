@@ -25,6 +25,9 @@ def _convert_to_notebook() -> None:
     from euporie.notebook.panes.notebook import Notebook
 
     app = get_app()
+
+    NotebookApp.config.load(args=[])
+    NotebookApp.state.load()
     nb_app = NotebookApp()
 
     for tab in app.panes:
@@ -34,6 +37,10 @@ def _convert_to_notebook() -> None:
             comms = tab.comms
             history = tab.history
             current_input = tab.input_box.buffer.text
+
+            # Flush any pending live output into the console's json so it is
+            # preserved when transferred to the notebook
+            tab.flush_live_output()
 
             # Stop the console driving the transferred kernel
             tab.app.before_render -= tab.render_outputs
