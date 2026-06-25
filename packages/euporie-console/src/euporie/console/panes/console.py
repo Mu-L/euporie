@@ -228,9 +228,9 @@ class Console(BaseConsole):
         # If there is no code cell in the render queue, add a dummy cell with no input
         if cell not in self.render_queue:
             # Add to end of previous cell in virtual notebook
-            # cell["outputs"].append(output_json)
-            # Create virtual cell
-            cell = new_code_cell(id=cell.id, execution_count=self.execution_count)
+            cell["outputs"].append(output_json)
+            # Create virtual cell in render queue
+            cell = new_code_cell(id=cell.id)
             self.render_queue.append(cell)
 
         # Add widgets to the live output
