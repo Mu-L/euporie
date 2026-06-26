@@ -446,6 +446,8 @@ class MenuContainer(PtkMenuContainer):
         @kb.add("enter")
         def _click(event: KeyPressEvent) -> None:
             """Click the selected menu item."""
+            if not self.selected_menu:
+                return
             item = self._get_menu(len(self.selected_menu) - 1)
             if item.handler:
                 self.selected_menu = []
@@ -651,6 +653,9 @@ class MenuContainer(PtkMenuContainer):
         Returns:
             The MenuItem at the specified depth.
         """
+        if not self.selected_menu or self.selected_menu[0] >= len(self.menu_items):
+            # Return an empty placeholder menu item when selection is invalid
+            return MenuItem()
         menu = self.menu_items[self.selected_menu[0]]
         for i, index in enumerate(self.selected_menu[1:], 1):
             visible_children = [c for c in menu.children if not c.hidden()]
