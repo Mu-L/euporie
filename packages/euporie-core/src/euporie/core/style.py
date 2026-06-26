@@ -385,6 +385,24 @@ def shortcuts_styles(cp: ColorPalette) -> dict[str, str]:
     }
 
 
+def notification_styles(cp: ColorPalette) -> dict[str, str]:
+    """Generate notification popup styles."""
+    variants = {
+        "primary": cp.ansiblue,
+        "success": cp.ansigreen,
+        "info": cp.ansicyan,
+        "warning": cp.ansiyellow,
+        "danger": cp.ansired,
+    }
+    styles = {
+        "notification": f"fg:{cp.fg} bg:{cp.bg.darker(0.1)}",
+        "notification border": f"fg:{cp.hl}",
+    }
+    for name, color in variants.items():
+        styles[f"notification {name} border"] = f"fg:{color}"
+    return styles
+
+
 def palette_styles(cp: ColorPalette) -> dict[str, str]:
     """Generate command palette styles."""
     return {
@@ -672,6 +690,7 @@ def build_style(cp: ColorPalette) -> Style:
         **toolbar_styles(cp),
         **completion_styles(cp),
         **shortcuts_styles(cp),
+        **notification_styles(cp),
         **palette_styles(cp),
         **pager_styles(cp),
         **markdown_styles(cp),

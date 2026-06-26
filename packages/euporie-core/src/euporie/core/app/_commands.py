@@ -103,6 +103,24 @@ async def _pipe_buffer(*cmd: str) -> None:
     await buffer.open_in_editor(validate_and_handle=validate, cmd=resolved_cmd)
 
 
+@add_cmd(hidden=True)
+def _notify(
+    *message: str,
+    timeout: float = 3.0,
+    placement: str = "top-right",
+    offset: int = 2,
+    **kwargs: str,
+) -> None:
+    """Display a message in a non-interactive popup notification."""
+    get_app().notify(
+        " ".join(str(x) for x in message),
+        timeout=timeout,
+        placement=placement,
+        offset=offset,
+        class_=kwargs.get("class", ""),
+    )
+
+
 @add_cmd(hidden=True, aliases=[""])
 def _go_to(event: KeyPressEvent, index: int = 0) -> None:
     """Go to a line or cell by number."""

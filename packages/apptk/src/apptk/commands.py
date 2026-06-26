@@ -74,34 +74,58 @@ COMMANDS: dict[str, Command] = {}
 _HANDLER_REGISTRY: dict[int, Command] = {}
 
 
-def parse_args(arg: str) -> list[Any]:
-    """Parse a command argument string into a list of values.
+def parse_args(arg: str) -> tuple[list[Any], dict[str, Any]]:
+    """Parse a command argument string into positional and keyword arguments.
+
+    Supports shell-like quoting (so quoted strings become a single argument)
+    and ``key=value`` keyword arguments. Tokens are evaluated as Python
+    literals where possible, otherwise kept as strings.
 
     Args:
         arg: The argument string to parse
 
     Returns:
-        A list of parsed values, with strings for items that couldn't be evaluated
+        A tuple of (positional args, keyword args).
     """
     if not arg:
-        return []
+        return [], {}
 
     import ast
+    import codecs
+    import shlex
 
-    result = []
-    for item in arg.split():
+    def _decode_escapes(item: str) -> str:
         try:
-            # Safely evaluate string as a Python literal
+            return codecs.decode(item, "unicode_escape")
+        except (ValueError, UnicodeDecodeError):
+            return item
+
+    def _convert(item: str) -> Any:
+        try:
             new_value = ast.literal_eval(item)
         except (ValueError, SyntaxError):
-            # Keep as string if evaluation fails
-            result.append(item)
-        else:
-            if type(new_value) is str:
-                result.append(item)
-            else:
-                result.append(new_value)
-    return result
+            return _decode_escapes(item)
+        if type(new_value) is str:
+            return _decode_escapes(item)
+        return new_value
+
+    try:
+        tokens = shlex.split(arg)
+    except ValueError:
+        # Unbalanced quotes etc. - fall back to simple splitting
+        tokens = arg.split()
+
+    args: list[Any] = []
+    kwargs: dict[str, Any] = {}
+    for token in tokens:
+        # Detect key=value, but only when the key is a valid identifier
+        if "=" in token:
+            key, _, value = token.partition("=")
+            if key.isidentifier():
+                kwargs[key] = _convert(value)
+                continue
+        args.append(_convert(token))
+    return args, kwargs
 
 
 class Command:
@@ -433,6 +457,7 @@ class Command:
         if not self.filter():
             return
         app = get_app()
+        args, kwargs = parse_args(arg)
         result = self.key_handler(
             KeyPressEvent(
                 key_processor_ref=weakref.ref(app.key_processor),
@@ -441,7 +466,8 @@ class Command:
                 previous_key_sequence=[],
                 is_repeat=False,
             ),
-            *parse_args(arg),
+            *args,
+            **kwargs,
         )
         if isawaitable(result):
 
@@ -490,28 +516,33 @@ class Command:
         if iscoroutinefunction(self.handler):
 
             async def _wrapper(
-                event: KeyPressEvent, *args: Any
+                event: KeyPressEvent, *args: Any, **kwargs: Any
             ) -> NotImplementedOrNone:
-                return await self.handler(*args)
+                return await self.handler(*args, **kwargs)
 
             return _wrapper
 
-        def _wrapper(event: KeyPressEvent, *args: Any) -> NotImplementedOrNone:
-            return self.handler(*args)
+        def _wrapper(
+            event: KeyPressEvent, *args: Any, **kwargs: Any
+        ) -> NotImplementedOrNone:
+            return self.handler(*args, **kwargs)
 
         return _wrapper
 
-    def __call__(self, event: KeyPressEvent, *args: Any) -> NotImplementedOrNone:
+    def __call__(
+        self, event: KeyPressEvent, *args: Any, **kwargs: Any
+    ) -> NotImplementedOrNone:
         """Call the command's key handler.
 
         Args:
             event: The key press event that triggered the command.
             *args: Additional arguments to pass to the handler.
+            **kwargs: Additional keyword arguments to pass to the handler.
 
         Returns:
             The result of the key handler, or NotImplemented.
         """
-        return self.key_handler(event, *args)
+        return self.key_handler(event, *args, **kwargs)
 
     def add_keys(
         self,

@@ -80,6 +80,7 @@ if TYPE_CHECKING:
     from apptk.commands import Command
     from apptk.contrib.ssh import PromptToolkitSSHSession
     from apptk.filters import Filter, FilterOrBool
+    from apptk.formatted_text import AnyFormattedText
     from apptk.layout.containers import AnyContainer
     from apptk.layout.layout import FocusableElement
     from apptk.widgets.toolbars import CommandBar
@@ -189,6 +190,7 @@ class BaseApp(ConfigurableApp, Application, ABC):
         "show-command-palette",
         "activate-command-bar",
         "activate-command-bar-shell",
+        "notify",
     )
 
     def __init__(
@@ -287,10 +289,14 @@ class BaseApp(ConfigurableApp, Application, ABC):
         self.dialog_classes: dict[str, type[Dialog]] = {}
         self.dialogs: dict[str, Dialog] = {}
         self.menus: dict[str, Float] = {}
+        # Holds the current notification popup (only one shown at a time)
+        self._notification: Float | None = None
+        self.notifications: list[Float] = []
         self.floats = ChainedList(
             self.graphics,
             self.dialogs.values(),
             self.menus.values(),
+            self.notifications,
         )
         # Continue loading when the application has been launched
         # and an event loop has been created
@@ -581,6 +587,116 @@ class BaseApp(ConfigurableApp, Application, ABC):
         self.renderer.reset()
         # Exit the main thread
         sys.exit(1)
+
+    def notify(
+        self,
+        message: AnyFormattedText,
+        timeout: float = 3.0,
+        placement: str = "top-right",
+        offset: int = 0,
+        class_: str = "",
+    ) -> None:
+        """Display a non-interactive popup notification over the app.
+
+        Only one notification is shown at a time; showing a new one dismisses
+        any existing notification.
+
+        Args:
+            message: The message text to display.
+            timeout: Seconds before the notification auto-dismisses. Use 0 or
+                a negative value to keep it shown until manually dismissed.
+            placement: Where to anchor the notification. One of ``top-left``,
+                ``top-right``, ``bottom-left``, ``bottom-right``, ``top``,
+                ``bottom``, ``left``, ``right``, or ``center``.
+            offset: Distance to shift the notification away from its anchored
+                edges. Positive values move it inward (down/right), negative
+                values move it outward (up/left). The horizontal component is
+                doubled so the offset appears square in the terminal.
+            class_: An optional variant to style the notification. One of
+                ``primary``, ``success``, ``info``, ``warning``, or ``danger``.
+        """
+        from apptk.border import RoundedLine
+        from apptk.formatted_text.ansi import ANSI
+        from apptk.layout.controls import FormattedTextControl
+        from apptk.widgets.base import Box, Frame
+
+        # Dismiss any existing notification
+        self.dismiss_notification()
+
+        # Interpret ANSI escape codes in plain string messages as formatting
+        if isinstance(message, str):
+            message = ANSI(message)
+
+        # Resolve the placement into Float anchor arguments
+        placement_anchors: dict[str, dict[str, int]] = {
+            "top-left": {"top": 0, "left": 0},
+            "top-right": {"top": 0, "right": 0},
+            "bottom-left": {"bottom": 0, "left": 0},
+            "bottom-right": {"bottom": 0, "right": 0},
+            "top": {"top": 0},
+            "bottom": {"bottom": 0},
+            "left": {"left": 0},
+            "right": {"right": 0},
+            "center": {},
+        }
+        anchors = dict(placement_anchors.get(placement, placement_anchors["top-right"]))
+
+        # Apply the offset to the anchored edges, doubling the horizontal
+        # component so the offset appears square in the terminal
+        if "top" in anchors:
+            anchors["top"] += offset
+        if "bottom" in anchors:
+            anchors["bottom"] += offset
+        if "left" in anchors:
+            anchors["left"] += offset * 2
+        if "right" in anchors:
+            anchors["right"] += offset * 2
+
+        # Build the notification style, optionally including a variant class
+        notification_style = (
+            f"class:notification,{class_}" if class_ else "class:notification"
+        )
+
+        float_ = Float(
+            content=Frame(
+                Box(
+                    Window(
+                        FormattedTextControl(message),
+                        style=notification_style,
+                        dont_extend_height=True,
+                        dont_extend_width=True,
+                    ),
+                    padding_left=1,
+                    padding_right=1,
+                    padding=0,
+                    style=notification_style,
+                ),
+                border=RoundedLine.grid,
+                style=f"{notification_style},border",
+            ),
+            z_index=1001,
+            **anchors,
+        )
+        self._notification = float_
+        self.notifications.append(float_)
+        self.invalidate()
+
+        if timeout > 0:
+
+            async def _dismiss_after_timeout() -> None:
+                await asyncio.sleep(timeout)
+                if self._notification is float_:
+                    self.dismiss_notification()
+
+            self.create_background_task(_dismiss_after_timeout())
+
+    def dismiss_notification(self) -> None:
+        """Remove the current notification float, if any."""
+        if self._notification is not None:
+            if self._notification in self.notifications:
+                self.notifications.remove(self._notification)
+            self._notification = None
+            self.invalidate()
 
     def get_dialog(self, name: str) -> Dialog | None:
         """Return a dialog instance, creating it if it does not exist."""
