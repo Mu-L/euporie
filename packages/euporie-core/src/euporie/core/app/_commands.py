@@ -109,15 +109,19 @@ def _notify(
     timeout: float = 3.0,
     placement: str = "top-right",
     offset: int = 2,
+    format: str = "ansi",
     **kwargs: str,
 ) -> None:
     """Display a message in a non-interactive popup notification."""
+    conversion_kwargs = {k: v for k, v in kwargs.items() if k != "class"}
     get_app().notify(
         " ".join(str(x) for x in message),
         timeout=timeout,
         placement=placement,
         offset=offset,
         class_=kwargs.get("class", ""),
+        format=format,
+        **conversion_kwargs,
     )
 
 

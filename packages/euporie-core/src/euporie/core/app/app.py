@@ -595,6 +595,8 @@ class BaseApp(ConfigurableApp, Application, ABC):
         placement: str = "top-right",
         offset: int = 0,
         class_: str = "",
+        format: str = "ansi",
+        **conversion_kwargs: Any,
     ) -> None:
         """Display a non-interactive popup notification over the app.
 
@@ -614,18 +616,26 @@ class BaseApp(ConfigurableApp, Application, ABC):
                 doubled so the offset appears square in the terminal.
             class_: An optional variant to style the notification. One of
                 ``primary``, ``success``, ``info``, ``warning``, or ``danger``.
+            format: How to interpret a plain string ``message``. Any format
+                that can be converted to formatted text (e.g. ``ansi``,
+                ``markdown``, ``html``, ``latex``, ``png``). Ignored if
+                ``message`` is already formatted text.
+            conversion_kwargs: Additional keyword arguments passed to
+                :py:meth:`Datum.convert` (e.g. ``cols``, ``rows``, ``fg``,
+                ``bg``) when converting a plain string ``message``.
         """
         from apptk.border import RoundedLine
-        from apptk.formatted_text.ansi import ANSI
         from apptk.layout.controls import FormattedTextControl
         from apptk.widgets.base import Box, Frame
 
         # Dismiss any existing notification
         self.dismiss_notification()
 
-        # Interpret ANSI escape codes in plain string messages as formatting
-        if isinstance(message, str):
-            message = ANSI(message)
+        # Convert a plain string message from the requested format to ft
+        if isinstance(message, str) and format != "ft":
+            from apptk.convert.datum import Datum
+
+            message = Datum(message, format).convert(to="ft", **conversion_kwargs)
 
         # Resolve the placement into Float anchor arguments
         placement_anchors: dict[str, dict[str, int]] = {
