@@ -138,10 +138,6 @@ class BaseNotebook(KernelPane, metaclass=ABCMeta):
             cell.input_box.buffer._load_history_task = None
             cell.input_box.buffer.load_history_if_not_yet_loaded()
 
-    def kernel_started(self, result: dict[str, Any] | None = None) -> None:
-        """Task to run when the kernel has started."""
-        super().kernel_started(result)
-
     # Notebook stuff
 
     def read_file(self, path: Path) -> None:
