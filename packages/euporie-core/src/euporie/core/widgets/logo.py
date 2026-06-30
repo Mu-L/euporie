@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from apptk.formatted_text.utils import pad
 from apptk.layout.containers import Window, WindowAlign
 from apptk.layout.controls import FormattedTextControl
 from apptk.widgets.base import Label
@@ -12,21 +13,23 @@ logo_micro = Label(" ⚈ ", style="class:menu,logo", width=3, dont_extend_width=
 
 logo_medium = Window(
     content=FormattedTextControl(
-        [
-            ("fg:white", "•"),
-            ("fg:darkred", "▗▆██▆▖"),
-            ("fg:yellow", "*"),
-            ("", "             \n"),
-            ("", " "),
-            ("fg:darkred", "████"),
-            ("fg:darkred bg:black reverse", "●"),
-            ("fg:darkred", "█"),
-            ("bold", " euporie      \n"),
-            ("fg:orange", "."),
-            ("fg:darkred", "▝🮅██🮅▘"),
-            ("", "    "),
-            ("fg:#888 dim", f"v{__version__}"),
-        ]
+        pad(
+            [
+                ("fg:white", "•"),
+                ("fg:darkred", "▗▆██▆▖"),
+                ("fg:yellow", "*"),
+                ("", "             \n"),
+                ("", " "),
+                ("fg:darkred", "████"),
+                ("fg:darkred bg:black reverse", "●"),
+                ("fg:darkred", "█"),
+                ("bold", " euporie      \n"),
+                ("fg:orange", "."),
+                ("fg:darkred", "▝🮅██🮅▘"),
+                ("", "    "),
+                ("fg:#888 dim", f"v{__version__}"),
+            ]
+        )
     ),
     height=3,
     dont_extend_width=False,
