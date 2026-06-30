@@ -13,7 +13,7 @@ from apptk.eventloop.utils import (
     run_coro_async,
     run_coro_sync,
 )
-from prompt_toolkit.utils import Event
+from apptk.utils import Event
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
