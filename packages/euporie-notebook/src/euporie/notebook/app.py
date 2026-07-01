@@ -203,6 +203,7 @@ class NotebookApp(BaseApp):
                 from euporie.notebook.panes.new import NewPane
 
                 self.new_pane = NewPane(self)
+                self.layout.focus(self.new_pane)
                 return self.new_pane
 
         if self.docking_split is None:
