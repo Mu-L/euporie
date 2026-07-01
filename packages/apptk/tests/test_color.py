@@ -1,5 +1,7 @@
 """Tests for color manipulation."""
 
+from __future__ import annotations
+
 import pytest
 from apptk.color import Color, ColorPalette
 
@@ -120,3 +122,130 @@ def test_color_palette_color_adjustment_absolute(color_palette: ColorPalette) ->
     assert more_red.hex != red.hex
     assert less_red.hex != red.hex
     assert blended_color.hex != red.hex
+
+
+def test_color_from_short_hex() -> None:
+    """A three-digit hex code is expanded to six digits."""
+    color = Color("#f00")
+    assert color.hex == "#FF0000"
+
+
+def test_color_without_hash_prefix() -> None:
+    """A hex code missing a leading '#' is accepted."""
+    color = Color("00ff00")
+    assert color.hex == "#00FF00"
+
+
+def test_color_from_ansi_name() -> None:
+    """A named ANSI color is resolved to its hex value."""
+    color = Color("ansired")
+    assert color.hex.startswith("#")
+    assert len(color.hex) == 7
+
+
+def test_color_invalid_hex_raises() -> None:
+    """A non-hex value raises ValueError."""
+    with pytest.raises(ValueError, match="not a color hex code"):
+        Color("notacolor")
+
+
+def test_color_from_existing_color_returns_same() -> None:
+    """Constructing a Color from a Color returns the same instance."""
+    color = Color("#123456")
+    assert Color(color) is color
+
+
+def test_color_rgb_components() -> None:
+    """The RGB components are decoded from the hex string."""
+    color = Color("#ff8000")
+    assert color.red == pytest.approx(1.0)
+    assert color.green == pytest.approx(128 / 255)
+    assert color.blue == pytest.approx(0.0)
+
+
+def test_color_perceived_brightness_light() -> None:
+    """A bright color is flagged as light."""
+    assert Color("#ffffff").is_light is True
+
+
+def test_color_perceived_brightness_dark() -> None:
+    """A dark color is not flagged as light."""
+    assert Color("#000000").is_light is False
+
+
+def test_color_from_rgb_ints() -> None:
+    """from_rgb accepts integer components."""
+    assert Color.from_rgb(255, 0, 0).hex == "#FF0000"
+
+
+def test_color_from_rgb_floats() -> None:
+    """from_rgb accepts float components in [0, 1]."""
+    assert Color.from_rgb(1.0, 0.0, 0.0).hex == "#FF0000"
+
+
+def test_color_from_rgb_clamps() -> None:
+    """from_rgb clamps out-of-range values."""
+    assert Color.from_rgb(999, -1, 128).hex == "#FF0080"
+
+
+def test_color_from_hsl() -> None:
+    """from_hsl round-trips through hue/lightness/saturation."""
+    assert Color.from_hsl(0.0, 0.5, 1.0).hex == "#FF0000"
+
+
+def test_color_towards_clamps_amount() -> None:
+    """Towards clamps the amount into [0, 1]."""
+    a = Color("#000000")
+    b = Color("#ffffff")
+    assert a.towards(b, -1).hex == a.hex
+    assert a.towards(b, 2).hex == b.hex
+
+
+def test_color_towards_midpoint() -> None:
+    """Towards halfway returns an interpolated color."""
+    a = Color("#000000")
+    b = Color("#ffffff")
+    midpoint = a.towards(b, 0.5)
+    # 127 == floor(0.5 * 255)
+    assert midpoint.hex == "#7F7F7F"
+
+
+def test_color_hash_uses_hex() -> None:
+    """Colors with the same hex have equal hashes."""
+    assert hash(Color("#ff0000")) == hash(Color("#FF0000"))
+
+
+def test_color_adjust_absolute_brightness() -> None:
+    """Absolute brightness adjustment clamps at 1.0."""
+    color = Color("#808080")
+    adjusted = color.adjust(brightness=2.0, rel=False)
+    assert adjusted.hex == "#FFFFFF"
+
+
+def test_color_palette_init_casts_values() -> None:
+    """Values passed to the palette constructor are cast to Color."""
+    palette = ColorPalette({"a": "#ff0000"})
+    assert isinstance(palette["a"], Color)
+    assert palette["a"].hex == "#FF0000"
+
+
+def test_color_palette_setitem_casts_values() -> None:
+    """Setting a string value casts it to Color."""
+    palette = ColorPalette()
+    palette["a"] = "#00ff00"
+    assert isinstance(palette["a"], Color)
+
+
+def test_color_palette_add_with_override_name() -> None:
+    """add() sets the underlying color name via override."""
+    palette = ColorPalette()
+    palette.add("primary", "#123456", override="my-primary")
+    assert palette["primary"].hex == "#123456"
+    assert str(palette["primary"]) == "my-primary"
+
+
+def test_color_palette_hash_is_content_based() -> None:
+    """Palettes with the same content hash equally."""
+    a = ColorPalette({"x": "#ff0000"})
+    b = ColorPalette({"x": "#ff0000"})
+    assert hash(a) == hash(b)

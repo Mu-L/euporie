@@ -231,6 +231,13 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.coverage.run]
+source = [
+    "."
+]
+[tool.coverage.report]
+ignore_errors = true
+
 [tool.taskipy.settings]
 runner = "uv run"
 
