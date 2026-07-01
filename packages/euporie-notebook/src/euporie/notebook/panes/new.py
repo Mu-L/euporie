@@ -158,7 +158,7 @@ class NewPane(Pane):
                                 HSplit(
                                     [
                                         Window(height=0),
-                                        logo_medium,
+                                        logo_medium(),
                                         recent_files_section,
                                     ],
                                     padding=Dimension(max=1),

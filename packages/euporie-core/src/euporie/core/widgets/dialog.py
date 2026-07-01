@@ -309,7 +309,7 @@ class AboutDialog(Dialog):
 
         self.body = HSplit(
             [
-                Box(logo_medium),
+                Box(logo_medium()),
                 Window(
                     FormattedTextControl(
                         [
