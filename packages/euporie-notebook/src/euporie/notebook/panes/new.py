@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-import random
+from datetime import date
 from typing import TYPE_CHECKING
 
 from apptk.border import RoundedLine
@@ -45,8 +45,14 @@ class NewPane(Pane):
     def __init__(self, app: BaseApp, path: Path | None = None) -> None:
         """Replace the main tab container."""
         super().__init__(app, path)
-        self._tip_index = random.randrange(len(TIPS))  # noqa: S311
         self.container = self.load_container()
+
+    @property
+    def _tip_index(self) -> int:
+        """Return the current tip index based on the date and stored offset."""
+        day_index = date.today().toordinal()
+        offset = self.app.state.tip_offset
+        return (day_index + offset) % len(TIPS)
 
     def load_container(self) -> AnyContainer:
         """Abstract method for loading the notebook's main container."""
@@ -116,7 +122,7 @@ class NewPane(Pane):
                 mouse_event.button == MouseButton.LEFT
                 and mouse_event.event_type == MouseEventType.MOUSE_UP
             ):
-                self._tip_index = (self._tip_index + 1) % len(TIPS)
+                self.app.state.tip_offset = self.app.state.tip_offset + 1
                 tip_display.datum = Datum(TIPS[self._tip_index], format="markdown")
                 return None
             return NotImplemented

@@ -95,6 +95,7 @@ class NotebookApp(BaseApp):
         *BaseApp.states,
         notebook_settings.side_bar_width,
         notebook_settings.side_bar_panel_index,
+        notebook_settings.tip_offset,
     ]
 
     settings: ClassVar[list[Setting]] = [

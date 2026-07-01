@@ -153,6 +153,19 @@ side_bar_panel_index = Setting(
     """,
 )
 
+tip_offset = Setting(
+    name="tip_offset",
+    type_=int,
+    help_="Offset added to the tip-of-the-day index",
+    default=0,
+    schema={"type": "integer"},
+    description="""
+        Tracks how many times the tip of the day has been advanced. This offset is
+        added to the date-determined tip index so the tip advances consistently
+        between sessions.
+    """,
+)
+
 show_scroll_bar = Setting(
     name="show_scroll_bar",
     title="scroll bar",
